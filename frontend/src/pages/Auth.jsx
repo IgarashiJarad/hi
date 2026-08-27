@@ -16,6 +16,7 @@ export default function AuthPage({ mode }) {
   const [email, setEmail] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [website, setWebsite] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [availability, setAvailability] = useState(null);
@@ -42,7 +43,7 @@ export default function AuthPage({ mode }) {
     setBusy(true);
     try {
       if (isRegister) {
-        const user = await register(username, email, password);
+        const user = await register(username, email, password, website);
         navigate("/settings", { state: { welcome: true, username: user.username } });
       } else {
         const user = await login(identifier, password);
@@ -125,6 +126,19 @@ export default function AuthPage({ mode }) {
               minLength={isRegister ? 6 : 1}
               className="w-full rounded-xl border border-input bg-secondary px-4 py-3 text-sm outline-none transition-colors focus:border-[#8B5CF6]"
             />
+            {isRegister && (
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                data-testid="hp-website"
+                className="pointer-events-none absolute -left-[9999px] h-0 w-0 opacity-0"
+              />
+            )}
 
             {error && <p data-testid="auth-error" className="text-sm text-destructive">{error}</p>}
 

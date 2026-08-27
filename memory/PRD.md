@@ -83,6 +83,10 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 17 — bugfix)
 - Fixed 30s preview: it never appeared for the owner because it was tied to Lanyard (requires joining their Discord server). Reworked: preview now comes from the Last.fm now-playing track via Deezer public search (MP3, iTunes AAC fallback) — play/pause button on the Last.fm now-playing row, vinyl spins while playing. Verified live on /hi2w (audio playing, pause works)
 
+## Implemented (2026-08-27, iteration 18)
+- Owner premium bypass: has_premium() = theme_pack OR Owner role (UID #2, hi2w) — server-enforced for paid themes, checkout blocked for owner, dashboard/pricing show unlocked
+- Anti-bot signup: honeypot field (hidden "website" input; filled = rejected) + IP rate limits (register 5/hour, login 10/5min; in-memory per worker, X-Forwarded-For aware)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

@@ -128,7 +128,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
     }
     if owner:
         data["email"] = u.get("email")
-        data["theme_pack"] = u.get("theme_pack", False)
+        data["theme_pack"] = has_premium(u)
         data["username_changed_at"] = u.get("username_changed_at")
         data["username_history"] = u.get("username_history", [])
         data["views"] = u.get("views", 0)
@@ -182,11 +182,33 @@ def verify_password(pw: str, hashed: str) -> bool:
 USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,20}$")
 RESERVED_USERNAMES = {"compare", "leaderboard", "pricing", "settings", "login", "register", "api", "dashboard"}
 
+_rate = {}
+
+
+def rate_limit(key: str, limit: int, window: int):
+    now = time.time()
+    hits = [t for t in _rate.get(key, []) if now - t < window]
+    if len(hits) >= limit:
+        raise HTTPException(429, "too many attempts — slow down and try again later")
+    hits.append(now)
+    _rate[key] = hits
+
+
+def client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = fwd.split(",")[0].strip() if fwd else ""
+    return ip or (request.client.host if request.client else "unknown")
+
+
+def has_premium(u: dict) -> bool:
+    return bool(u.get("theme_pack")) or (u.get("username", "").lower() in OWNER_SET)
+
 
 class RegisterBody(BaseModel):
     username: str
     email: str
     password: str
+    website: str = ""
 
 
 class LoginBody(BaseModel):
@@ -212,7 +234,10 @@ async def next_uid() -> int:
 
 
 @api_router.post("/auth/register")
-async def register(body: RegisterBody):
+async def register(body: RegisterBody, request: Request):
+    if body.website:
+        raise HTTPException(400, "signup rejected")
+    rate_limit(f"reg:{client_ip(request)}", limit=5, window=3600)
     username = body.username.strip().lower()
     email = body.email.strip().lower()
     if not USERNAME_RE.match(username):
@@ -243,7 +268,8 @@ async def register(body: RegisterBody):
 
 
 @api_router.post("/auth/login")
-async def login(body: LoginBody):
+async def login(body: LoginBody, request: Request):
+    rate_limit(f"login:{client_ip(request)}", limit=10, window=300)
     ident = body.identifier.strip().lower()
     user = await db.users.find_one({"$or": [{"email": ident}, {"username": ident}]})
     if not user or not verify_password(body.password, user["password_hash"]):
@@ -270,7 +296,7 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         raise HTTPException(400, "Maximum 12 links")
     if body.theme not in ALL_THEMES:
         raise HTTPException(400, "Unknown theme")
-    if body.theme not in FREE_THEMES and not user.get("theme_pack"):
+    if body.theme not in FREE_THEMES and not has_premium(user):
         raise HTTPException(403, "That theme is part of the paid theme pack")
     for link in body.links:
         if not re.match(r"^https?://", link.url):
@@ -838,7 +864,7 @@ class CheckoutBody(BaseModel):
 async def create_checkout(body: CheckoutBody, user: dict = Depends(current_user)):
     if body.lookup_key != "theme_pack":
         raise HTTPException(400, "Unknown product")
-    if user.get("theme_pack"):
+    if has_premium(user):
         raise HTTPException(409, "Theme pack already unlocked")
     prices = stripe.Price.list(lookup_keys=[body.lookup_key], active=True, limit=1).data
     if not prices:

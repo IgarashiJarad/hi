@@ -449,7 +449,7 @@ async def track_view(username: str, body: ViewBody):
             host = (urlparse(body.referrer).hostname or "").replace("www.", "")
         except Exception:
             host = ""
-    if host and "emergentagent.com" not in host:
+    if host and "emergentagent.com" not in host and "emergent.sh" not in host:
         res = await db.users.update_one(
             {"username": username, "referrers.host": host},
             {"$inc": {"referrers.$.count": 1}},

@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/LandingDark";
 import { ComparePage, LeaderboardPage, PricingPage } from "@/pages/InfoPages";
 import AuthPage from "@/pages/Auth";
-import Settings from "@/pages/Settings";
+import Settings from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 
 function ScrollTop() {

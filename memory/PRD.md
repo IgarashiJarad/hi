@@ -52,6 +52,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 9)
 - Compare, Leaderboard, Pricing moved off the landing into standalone routes /compare, /leaderboard, /pricing (shared dark shell in InfoPages.jsx; Nav + sections exported from LandingDark.jsx; landing keeps hero, showcase, marquee, features, playground)
 
+## Implemented (2026-08-27, iteration 10)
+- Dashboard redesign (guns.lol-inspired, not copied): /settings now a sidebar dashboard — search sections (⌘K wired), tabs: Overview (stat cards: username/views/link taps/premium, profile-completion checklist with progress bar, quick actions, analytics sparkline + referrers), Customize (profile/photo/theme + live preview), Links, Connections (Discord + Last.fm with linked badges), Premium (unlock/owned states). Sidebar has my-page + share-profile buttons. New Dashboard.jsx; old Settings.jsx unused.
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

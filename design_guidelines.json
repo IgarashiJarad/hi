@@ -1,0 +1,171 @@
+{
+  "theme": {
+    "default_mode": "light",
+    "support_dark": true,
+    "archetype": "ORGANIC & EARTHY mixed with SOFT UTILITY (Warm Japanese Tea & Matte Ceramic)",
+    "description": "Chill, simplistic, calm digital sanctuary. Avoids high-intensity neon or generic SaaS blue. Uses soothing matte tones, paper-like warmth, refined borders, and gentle tactile surfaces."
+  },
+  "typography": {
+    "font_family_heading": "Cabinet Grotesk, Outfit, Plus Jakarta Sans, sans-serif",
+    "font_family_serif_editorial": "Cormorant Garamond, Playfair Display, serif",
+    "font_family_body": "Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "font_family_mono": "JetBrains Mono, Menlo, monospace",
+    "font_rules": [
+      "Headings must NEVER use generic Inter or Space Grotesk (strictly prohibited).",
+      "H1 Ceiling rule: Max text-4xl sm:text-5xl lg:text-6xl. Subtitle must stay within 2 tailwind steps (text-lg to text-xl).",
+      "Overlines/Kickers must be uppercase, text-xs, tracking-[0.2em], text-stone-500.",
+      "Track titles & scrobble stamps use mono or clean sans for precision."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "light": {
+        "bg_main": "#F8F7F4",
+        "bg_surface": "#FFFFFF",
+        "bg_surface_subtle": "#F2EFE9",
+        "border": "#E6E2D8",
+        "border_subtle": "#ECE8E1",
+        "text_primary": "#1C1B19",
+        "text_secondary": "#635F59",
+        "text_muted": "#8E8880",
+        "accent_sage": "#3F5E4D",
+        "accent_sage_light": "#EBF2ED",
+        "accent_terracotta": "#C85A32",
+        "accent_terracotta_soft": "#FBF0EC",
+        "discord_blurple_calm": "#5865F2",
+        "discord_tint_bg": "#EEF1FF",
+        "lastfm_crimson_calm": "#BA2727",
+        "lastfm_tint_bg": "#FDF2F2"
+      },
+      "dark": {
+        "bg_main": "#121211",
+        "bg_surface": "#1A1918",
+        "bg_surface_subtle": "#222120",
+        "border": "#2D2C2A",
+        "border_subtle": "#363532",
+        "text_primary": "#F5F3EF",
+        "text_secondary": "#A8A39B",
+        "text_muted": "#75716A",
+        "accent_sage": "#78A68B",
+        "accent_sage_light": "#1B2821",
+        "accent_terracotta": "#E07A52",
+        "accent_terracotta_soft": "#2D1B15",
+        "discord_blurple_calm": "#7289DA",
+        "discord_tint_bg": "#1E2235",
+        "lastfm_crimson_calm": "#E04C4C",
+        "lastfm_tint_bg": "#2F1919"
+      }
+    },
+    "forbidden_colors": [
+      "#7351B7",
+      "#1B93A4",
+      "pure saturated neon greens or harsh rainbow gradients"
+    ]
+  },
+  "surface_strategy": {
+    "cards": "Warm solid ceramic surfaces (bg-white/90 or dark:bg-[#1A1918]/90) with crisp 1px borders (border-[#E6E2D8] or dark:border-[#2D2C2A]), soft ambient shadow (shadow-[0_4px_20px_rgba(0,0,0,0.03)]), and rounded-2xl to rounded-3xl corners.",
+    "nav_bar": "Floating crystal pill nav with backdrop-blur-xl bg-white/80 dark:bg-[#121211]/80 border border-stone-200/80 dark:border-stone-800/80 px-6 py-3 shadow-sm",
+    "social_chips": "Tactile interactive pills with auto-favicon, subtle border, smooth hover lift (-translate-y-0.5), crisp high-contrast active states",
+    "discord_card": "Lush custom card showcasing user banner (with gradient fallbacks if null), high-res circular avatar with online status ring, Discord tag badge with copy-to-clipboard, custom status text, and connected badge",
+    "lastfm_card": "Vinyl record groove animation, equalizer bars (animating when track is currently playing), album art with soft drop-shadow, track name, artist, scrobble relative timestamp, and live Last.fm link"
+  },
+  "layout_and_grids": {
+    "landing_page": {
+      "hero_section": "Asymmetric bento layout. Left col: masked line-by-line editorial headline, calm narrative copy, instant username claim CTA box. Right col: live interactive mock preview card of a public profile (/demo) with floating Discord widget & spinning vinyl Last.fm track.",
+      "editorial_ribbon": "Slow drifting marquee (react-fast-marquee or framer-motion) with serif typography showcasing connected platforms (Spotify, Discord, Last.fm, GitHub, Substack, YouTube, Instagram, X/Twitter).",
+      "feature_bento": "Tetris-style grid (md:grid-cols-12 gap-6) highlighting: 1. Auto-Favicon Engine (col-span-12 md:col-span-7), 2. Live Last.fm Scrobble Groove (col-span-12 md:col-span-5), 3. Discord Banner & Presence Mirror (col-span-12 md:col-span-6), 4. Minimalist Shareable Link /username (col-span-12 md:col-span-6).",
+      "interactive_playground": "Live preview sandbox where visitors can type any domain or paste a mock Discord ID to see live chip rendering and banner extraction.",
+      "footer": "Deep calm footer with massive subtle brandmark typography, privacy-first pledge, fast navigation links."
+    },
+    "public_profile_page": {
+      "route": "/:username",
+      "structure": "Focused, distraction-free container (max-w-xl mx-auto px-4 py-12 sm:py-16). 1. Header (Avatar, Display Name, Bio with warm markdown links, pronouns/location pill). 2. Discord Presence Card (Banner background, animated status, copy Discord ID). 3. Last.fm Live Groove (Now Playing pulsing vinyl + 3 recent scrobbles accordion). 4. Social Links Stack (Dynamic auto-favicon icons, click count or preview). 5. Subtle 'Made with Sanctuary' badge."
+    },
+    "settings_dashboard": {
+      "route": "/settings",
+      "structure": "Clean 2-column layout on desktop: Left sidebar / tab list (Profile & Bio, Discord Connection, Last.fm Scrobbler, Social Links Manager, Appearance & SEO). Right live preview pane that updates in real-time as user changes inputs."
+    }
+  },
+  "motion_and_interactions": {
+    "library": "framer-motion",
+    "feel": "Slow, soft, weighty, premium (duration: 0.5s to 0.8s, ease: [0.22, 1, 0.36, 1])",
+    "animations": [
+      {
+        "name": "hero_text_reveal",
+        "description": "Masked upward reveal for header lines (overflow-hidden wrapper with initial: {y: '100%'} animate: {y: 0})"
+      },
+      {
+        "name": "staggered_cards",
+        "description": "Staggered fade-up for profile links and bento widgets (staggerChildren: 0.08)"
+      },
+      {
+        "name": "vinyl_spin",
+        "description": "Slow continuous rotation (animate: {rotate: 360}, transition: {repeat: Infinity, duration: 12, ease: 'linear'}) when Last.fm is 'now_playing'"
+      },
+      {
+        "name": "equalizer_bars",
+        "description": "Gentle fluctuating heights (scaleY animate between 0.3 and 1) for currently playing track"
+      },
+      {
+        "name": "favicon_pop",
+        "description": "Subtle scale spring (initial: {scale: 0.8, opacity: 0} animate: {scale: 1, opacity: 1}) when URL domain is recognized"
+      }
+    ]
+  },
+  "favicon_autodetection_rules": {
+    "engine": "Dynamic domain extractor with fallback cascade: 1. Google Favicon Service (https://www.google.com/s2/favicons?domain={domain}&sz=128), 2. DuckDuckGo Icons (https://icons.duckduckgo.com/ip3/{domain}.ico), 3. Dedicated Lucide/Brand icon mapping for top 30 platforms (GitHub, Twitter/X, Discord, YouTube, Spotify, Last.fm, LinkedIn, Instagram, TikTok, Twitch, Threads, Mastodon, Bluesky, Substack, Medium, Dribbble, Figma, Behance, SoundCloud, Steam, Reddit, Email, Website)."
+  },
+  "image_urls": {
+    "curated_assets": [
+      {
+        "category": "hero_demo_avatar",
+        "url": "https://images.unsplash.com/photo-1642337286443-e8de448ee3ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHw0fHxtaW5pbWFsaXN0JTIwYWVzdGhldGljJTIwcG9ydHJhaXQlMjBtdXNpYyUyMHZpbnlsfGVufDB8fHx8MTc4NzgwNjI2N3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Minimalist aesthetic mannequin head with headphones on dark wood audio unit"
+      },
+      {
+        "category": "hero_lifestyle_music",
+        "url": "https://images.unsplash.com/photo-1761098281103-51bf33e39d7f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwYWVzdGhldGljJTIwcG9ydHJhaXQlMjBtdXNpYyUyMHZpbnlsfGVufDB8fHx8MTc4NzgwNjI2N3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Aesthetic fingers gently browsing vinyl record sleeves in blue moody light"
+      },
+      {
+        "category": "ambient_desk_light",
+        "url": "https://images.unsplash.com/photo-1761083042094-988fd3a3ae69?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwyfHxjb3p5JTIwZGVzayUyMHNldHVwJTIwYW1iaWVudCUyMGxhbXAlMjBwbGFudHxlbnwwfHx8fDE3ODc4MDYyNjd8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Warm ambient amber yellow lamp beside minimalist plant on wooden desk"
+      },
+      {
+        "category": "avatar_3d_chill",
+        "url": "https://images.unsplash.com/photo-1740252117013-4fb21771e7ca?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwYXZhdGFyJTIwYWVzdGhldGljJTIwcHJvZmlsZXxlbnwwfHx8fDE3ODc4MDYyNzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Clean modern 3D clay-style avatar with blue cap on soft warm background"
+      },
+      {
+        "category": "avatar_aesthetic_art",
+        "url": "https://images.unsplash.com/photo-1707912079134-becf5a3598e2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHw0fHxtaW5pbWFsaXN0JTIwYXZhdGFyJTIwYWVzdGhldGljJTIwcHJvZmlsZXxlbnwwfHx8fDE3ODc4MDYyNzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Pastel iridescent artistic bust silhouette with dreamlike textures"
+      }
+    ]
+  },
+  "instructions_to_main_agent": {
+    "architecture_and_routes": [
+      "Route '/': Landing page with value proposition, live interactive profile preview playground, feature bento, testimonials/examples showcase, and registration CTA.",
+      "Route '/:username': Public profile view for any user. Renders Discord card, Last.fm now playing widget, and social link chips. Accessible to everyone without login.",
+      "Route '/settings': Protected settings dashboard allowing the user to update bio, Discord User ID (with instant preview & test fetch), Last.fm username (with recent scrobbles test), and add/edit/reorder social links with instant favicon autodetection.",
+      "Route '/login' and '/register': Minimalist warm authentication modals/pages with demo 1-click accounts."
+    ],
+    "backend_mock_and_real_integrations": [
+      "Provide robust backend API endpoints in FastAPI (/api/profile/{username}, /api/user/settings, /api/discord/lookup/{discord_id}, /api/lastfm/scrobbles/{username}).",
+      "For Discord integration: Implement lookup endpoint using public Discord user API or Lanyard / Discord snowflake resolver (with realistic mock fallback when rate limited or offline so Discord banner, avatar, custom status, and discriminator render flawlessly).",
+      "For Last.fm integration: Support public Last.fm 2.0 API (user.getrecenttracks) using user-provided API key or built-in service key with realistic rich scrobble mock data fallback (track title, artist, album art, scrobble date, is_now_playing indicator).",
+      "For Favicon detection: Backend or client helper extracting hostname and providing high-res favicon URLs from Google & DDG favicon CDN plus fallback SVG icons."
+    ],
+    "testing_data_testid_convention": [
+      "All buttons, inputs, links, and key cards MUST have specific kebab-case data-testid tags (e.g. data-testid='claim-username-input', data-testid='discord-id-input', data-testid='social-link-item-0', data-testid='lastfm-now-playing-card', data-testid='save-settings-button')."
+    ]
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "spacing": "Generous spacing. Use p-6 to p-12 on desktop cards. Give 80px+ vertical padding between sections.",
+    "contrast": "Ensure WCAG AA contrast compliance: text must meet 4.5:1 ratio against background. Hover states must explicitly set text and background color.",
+    "no_center_trap": "Use asymmetric alignment, left-aligned headers with offset right interactive previews.",
+    "no_generic_gradients": "Avoid full screen vibrant gradients. Use tactile matte colors with subtle 1px borders and soft diffuse shadows.",
+    "toast_notifications": "Use Sonner for toasts (saved settings, copied Discord ID, invalid URL warnings)."
+  }
+}

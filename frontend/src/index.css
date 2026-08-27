@@ -1,0 +1,114 @@
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 40 22% 96%;
+        --foreground: 30 6% 10%;
+        --card: 0 0% 100%;
+        --card-foreground: 30 6% 10%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 30 6% 10%;
+        --primary: 146 20% 31%;
+        --primary-foreground: 40 22% 96%;
+        --secondary: 38 16% 93%;
+        --secondary-foreground: 30 6% 10%;
+        --muted: 38 16% 93%;
+        --muted-foreground: 36 5% 37%;
+        --accent: 38 16% 93%;
+        --accent-foreground: 30 6% 10%;
+        --destructive: 11 57% 49%;
+        --destructive-foreground: 40 22% 96%;
+        --border: 38 16% 87%;
+        --input: 38 16% 87%;
+        --ring: 146 20% 31%;
+        --radius: 1rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    ::selection {
+        background: #3f5e4d;
+        color: #f8f7f4;
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}
+
+@keyframes marquee-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@keyframes eq-dance {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
+}
+
+@keyframes soft-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+.marquee-track {
+    animation: marquee-drift 46s linear infinite;
+}
+
+.eq-bar {
+    transform-origin: bottom;
+    animation: eq-dance 0.9s ease-in-out infinite alternate;
+}
+
+.soft-pulse {
+    animation: soft-pulse 2.4s ease-in-out infinite;
+}
+
+html.lenis, html.lenis body {
+    height: auto;
+}
+.lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+}

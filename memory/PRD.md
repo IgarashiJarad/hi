@@ -80,6 +80,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Weekly digest email via Emergent-managed Resend (gate + from_name per playbook): Sunday 00:00 UTC hourly-check loop sends each user their week (visits, top referrer, most-tapped link), one per ISO week; dashboard "email me this week's digest now" button → POST /api/auth/digest-test
 - Visitor greeting: localStorage per-page visit memory; returning visitors see "welcome back — you've been here before" under the badges
 
+## Implemented (2026-08-27, iteration 17 — bugfix)
+- Fixed 30s preview: it never appeared for the owner because it was tied to Lanyard (requires joining their Discord server). Reworked: preview now comes from the Last.fm now-playing track via Deezer public search (MP3, iTunes AAC fallback) — play/pause button on the Last.fm now-playing row, vinyl spins while playing. Verified live on /hi2w (audio playing, pause works)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

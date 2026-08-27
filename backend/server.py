@@ -466,6 +466,26 @@ async def lastfm_recent(username: str, limit: int = 10):
         raw = [raw]
     tracks = [normalize_track(t) for t in raw if isinstance(t, dict)]
     now_playing = next((t for t in tracks if t["now_playing"]), None)
+    if now_playing:
+        try:
+            q = f"{now_playing['artist']} {now_playing['name']}"
+            r = await http.get("https://api.deezer.com/search", params={"q": q, "limit": 1})
+            items = r.json().get("data", [])
+            if items and items[0].get("preview"):
+                now_playing["preview_url"] = items[0]["preview"]
+        except Exception:
+            pass
+        if not now_playing.get("preview_url"):
+            try:
+                r = await http.get(
+                    "https://itunes.apple.com/search",
+                    params={"term": f"{now_playing['artist']} {now_playing['name']}", "media": "music", "entity": "song", "limit": 1},
+                )
+                results = r.json().get("results", [])
+                if results and results[0].get("previewUrl"):
+                    now_playing["preview_url"] = results[0]["previewUrl"]
+            except Exception:
+                pass
     result = {"user": username, "now_playing": now_playing, "tracks": tracks}
     _lastfm_cache[cache_key] = {"at": time.time(), "data": result}
     return result

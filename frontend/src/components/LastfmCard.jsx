@@ -1,5 +1,6 @@
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AudioLines, RefreshCw, ExternalLink } from "lucide-react";
+import { AudioLines, RefreshCw, ExternalLink, Play, Pause } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ease } from "./motion";
 
@@ -31,6 +32,16 @@ function Vinyl({ image, playing }) {
 }
 
 export function LastfmCard({ data, loading, error, onRetry }) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const togglePlay = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) a.pause();
+    else a.play().catch(() => {});
+  };
+
   if (loading) {
     return (
       <div data-testid="lastfm-card-loading" className="rounded-3xl border border-border bg-card p-5">
@@ -82,9 +93,20 @@ export function LastfmCard({ data, loading, error, onRetry }) {
         </a>
       </div>
 
+      {now?.preview_url && (
+        <audio
+          ref={audioRef}
+          data-testid="lastfm-preview-audio"
+          src={now.preview_url}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+        />
+      )}
+
       {now ? (
         <div data-testid="lastfm-now-playing" className="mb-4 flex items-center gap-4 rounded-2xl tint-lastfm p-3.5">
-          <Vinyl image={now.image_url} playing />
+          <Vinyl image={now.image_url} playing={playing} />
           <div className="min-w-0 flex-1">
             <p className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#EF4444]">
               <Equalizer /> now playing
@@ -92,6 +114,16 @@ export function LastfmCard({ data, loading, error, onRetry }) {
             <p data-testid="lastfm-now-track" className="truncate font-mono text-sm font-medium">{now.name}</p>
             <p data-testid="lastfm-now-artist" className="truncate text-xs text-muted-foreground">{now.artist}</p>
           </div>
+          {now.preview_url && (
+            <button
+              data-testid="lastfm-preview-btn"
+              onClick={togglePlay}
+              title={playing ? "pause preview" : "play 30s preview"}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8B5CF6]/25 text-[#A78BFA] transition-colors hover:bg-[#8B5CF6]/40"
+            >
+              {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+            </button>
+          )}
         </div>
       ) : (
         <p className="mb-4 rounded-2xl bg-secondary p-3.5 text-xs text-muted-foreground">

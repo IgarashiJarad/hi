@@ -368,7 +368,7 @@ export default function Dashboard() {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                  <Card testid="card-username" title="Username" value={`@${user.username}`} sub="claimed and yours" icon={User} />
+                  <Card testid="card-username" title="Username" value={`@${user.username}`} sub={`UID #${(user.uid || 0).toLocaleString()} · unchangeable`} icon={User} />
                   <Card testid="card-views" title="Profile views" value={(user.views || 0).toLocaleString()} sub={`+${weekViews} in the last 7 days`} icon={Eye} />
                   <Card testid="card-taps" title="Link taps" value={totalTaps.toLocaleString()} sub="across all socials" icon={MousePointerClick} />
                   <Card testid="card-premium" title="Premium" value={user.theme_pack ? "unlocked" : "free"} sub={user.theme_pack ? "every theme, forever" : "one-time upgrade available"} icon={Gem} />

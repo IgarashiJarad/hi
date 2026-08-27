@@ -66,6 +66,10 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Username changes limited to once per 30 days: username_changed_at stamped on change; repeat attempts get 429 with the next-available date; dashboard shows cooldown note and disables the field
 - Brand prefix switched from dontblink.page to dontblink.site across landing, auth, dashboard, pricing copy
 
+## Implemented (2026-08-27, iteration 14)
+- Permanent UIDs: sequential atomic counter (counters collection), assigned at register; existing users backfilled by signup order (wren #1, hi2w #2); uid is public, never editable, survives username changes; dashboard username card shows "UID #N · unchangeable"
+- Owner role re-pointed: user renamed test → hi2w (using the rename feature); OWNER_USERNAMES updated to hi2w
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

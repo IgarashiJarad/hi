@@ -18,6 +18,7 @@ import httpx
 import stripe
 import requests as http_requests
 from bson import ObjectId
+from pymongo import ReturnDocument
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
@@ -118,6 +119,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "theme": u.get("theme", "light"),
         "theme_auto": u.get("theme_auto", False),
         "roles": user_roles(u),
+        "uid": u.get("uid"),
     }
     if owner:
         data["email"] = u.get("email")
@@ -196,6 +198,13 @@ class ProfileUpdate(BaseModel):
     theme_auto: bool = False
 
 
+async def next_uid() -> int:
+    doc = await db.counters.find_one_and_update(
+        {"_id": "uid"}, {"$inc": {"seq": 1}}, upsert=True, return_document=ReturnDocument.AFTER
+    )
+    return doc["seq"]
+
+
 @api_router.post("/auth/register")
 async def register(body: RegisterBody):
     username = body.username.strip().lower()
@@ -214,6 +223,7 @@ async def register(body: RegisterBody):
         "username": username,
         "email": email,
         "password_hash": hash_password(body.password),
+        "uid": await next_uid(),
         "display_name": username,
         "bio": "",
         "discord_id": None,

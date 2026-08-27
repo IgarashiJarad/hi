@@ -7,6 +7,7 @@ import { ease } from "../components/motion";
 import { DiscordCard } from "../components/DiscordCard";
 import { LastfmCard } from "../components/LastfmCard";
 import { SocialLinks } from "../components/SocialLinks";
+import { RolePills } from "../components/RolePills";
 
 export default function Profile() {
   const { username } = useParams();
@@ -118,6 +119,11 @@ export default function Profile() {
           </motion.div>
           <h1 data-testid="profile-display-name" className="font-display text-2xl font-bold">{name}</h1>
           <p data-testid="profile-username" className="mt-0.5 text-sm text-muted-foreground">@{profile.username}</p>
+          {profile.roles?.length > 0 && (
+            <div className="mt-3 flex justify-center">
+              <RolePills roles={profile.roles} />
+            </div>
+          )}
           {profile.bio && <p data-testid="profile-bio" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>}
           {isOwn && (
             <Link data-testid="edit-profile-btn" to="/settings" className="mt-4 inline-block rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">

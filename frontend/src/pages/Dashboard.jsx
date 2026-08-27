@@ -16,6 +16,7 @@ import { LastfmCard } from "../components/LastfmCard";
 import { prettyLabel, getDomain } from "../lib/favicon";
 import { THEMES, THEME_PACK_PRICE } from "../lib/themes";
 import { Switch } from "../components/ui/switch";
+import { RolePills } from "../components/RolePills";
 
 function Sparkline({ data }) {
   if (!data?.length) return null;
@@ -323,6 +324,12 @@ export default function Dashboard() {
             {tab === "overview" && (
               <div className="space-y-6">
                 <h1 className="font-display text-2xl font-bold">Account overview</h1>
+                {user.roles?.length > 0 && (
+                  <div className="-mt-3 flex items-center gap-2">
+                    <span className="text-xs text-white/40">your roles</span>
+                    <RolePills roles={user.roles} />
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                   <Card testid="card-username" title="Username" value={`@${user.username}`} sub="claimed and yours" icon={User} />
                   <Card testid="card-views" title="Profile views" value={(user.views || 0).toLocaleString()} sub={`+${weekViews} in the last 7 days`} icon={Eye} />

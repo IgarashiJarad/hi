@@ -83,6 +83,28 @@ class User(BaseDocument):
     created_at: str = ""
 
 
+ROLE_DEFS = {
+    "owner": {"id": "owner", "label": "Owner", "color": "#8B5CF6", "icon": "crown"},
+    "developer": {"id": "developer", "label": "Developer", "color": "#60A5FA", "icon": "code"},
+    "v1": {"id": "v1", "label": "V1", "color": "#F5C518", "icon": "zap"},
+}
+OWNER_SET = {x.strip().lower() for x in os.environ.get("OWNER_USERNAMES", "").split(",") if x.strip()}
+DEV_SET = {x.strip().lower() for x in os.environ.get("DEVELOPER_USERNAMES", "").split(",") if x.strip()}
+V1_CUTOFF = "2027-01-01"
+
+
+def user_roles(u: dict) -> list:
+    out = []
+    uname = (u.get("username") or "").lower()
+    if uname in OWNER_SET:
+        out.append(ROLE_DEFS["owner"])
+    if uname in DEV_SET:
+        out.append(ROLE_DEFS["developer"])
+    if (u.get("created_at") or "") < V1_CUTOFF:
+        out.append(ROLE_DEFS["v1"])
+    return out
+
+
 def public_user(u: dict, owner: bool = False) -> dict:
     data = {
         "id": str(u["_id"]),
@@ -95,6 +117,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "avatar_url": f"/api/files/{u['avatar_path']}" if u.get("avatar_path") else None,
         "theme": u.get("theme", "light"),
         "theme_auto": u.get("theme_auto", False),
+        "roles": user_roles(u),
     }
     if owner:
         data["email"] = u.get("email")
@@ -277,6 +300,7 @@ async def leaderboard():
             "display_name": u.get("display_name") or u["username"],
             "views": u.get("views", 0),
             "avatar_url": f"/api/files/{u['avatar_path']}" if u.get("avatar_path") else None,
+            "roles": user_roles(u),
         })
     return {"leaders": leaders}
 

@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { MaskedLine, FadeUp, ease } from "../components/motion";
 import { Favicon } from "../components/FaviconImg";
 import { DiscordCard } from "../components/DiscordCard";
+import { RolePills } from "../components/RolePills";
 import { prettyLabel, getDomain } from "../lib/favicon";
 import { api, errMsg } from "../lib/api";
 
@@ -379,7 +380,10 @@ export function Leaderboard() {
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{l.display_name}</p>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-white">{l.display_name}</p>
+                      <RolePills roles={l.roles} />
+                    </div>
                     <p className="truncate text-xs text-white/40">@{l.username}</p>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-sm text-white/60">

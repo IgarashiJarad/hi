@@ -45,6 +45,7 @@ export default function Profile() {
       .get(`/profile/${username}`)
       .then((r) => setProfile(r.data))
       .catch(() => setNotFound(true));
+    api.post(`/profile/${username}/view`, { referrer: document.referrer }).catch(() => {});
   }, [username]);
 
   useEffect(() => {

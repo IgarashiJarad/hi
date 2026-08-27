@@ -246,6 +246,27 @@ export default function Settings() {
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
+            <h2 className="mb-5 font-display text-lg font-bold">Your stats</h2>
+            <div className="flex items-baseline gap-2">
+              <span data-testid="stats-total-views" className="font-display text-4xl font-bold">{user.views || 0}</span>
+              <span className="text-sm text-muted-foreground">page visits</span>
+            </div>
+            {user.referrers?.length > 0 ? (
+              <ul data-testid="stats-referrers" className="mt-4 space-y-2">
+                {user.referrers.map((r, i) => (
+                  <li key={r.host} data-testid={`stats-referrer-${i}`} className="flex items-center gap-2.5 text-sm">
+                    <Favicon url={`https://${r.host}`} size={14} />
+                    <span className="flex-1 truncate">{r.host}</span>
+                    <span className="text-muted-foreground">{r.count}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">Share your page — where visitors arrive from shows up here.</p>
+            )}
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <h2 className="mb-1 font-display text-lg font-bold">Discord</h2>
             <p className="mb-5 text-xs text-muted-foreground">
               Discord → user settings → advanced → enable developer mode → right-click your profile → copy user ID.

@@ -26,6 +26,10 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Paid theme pack via Stripe claimable sandbox ($4.99 one-time, tax handled by Stripe managed payments w/ automatic-tax fallback): checkout → success redirect → status poll grants entitlement; webhook at /api/stripe/webhook; server blocks paid themes with 403 before purchase
 - Profile photo upload: object storage via Emergent integration proxy (sanctuary/avatars/...), served through /api/files/{path}; overrides Discord avatar; remove supported
 
+## Implemented (2026-08-27, iteration 3)
+- Page view counter: POST /api/profile/{username}/view on every public page load; settings "Your stats" shows total visits + top referrers (host-normalized, favicon per source, top 6); stats only visible to owner
+- Spotify vinyl art: Lanyard proxy now passes album_art_url; Discord card shows spinning vinyl with live album cover + song/artist while listening to Spotify (falls back to activity pill otherwise)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

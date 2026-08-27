@@ -112,7 +112,22 @@ export function DiscordCard({ data, loading, error, onRetry, presence }) {
             {copied ? <Check size={13} /> : <Copy size={13} />}
           </button>
         </div>
-        {presence?.activity && (
+        {presence?.spotify?.album_art ? (
+          <div data-testid="discord-spotify-vinyl" className="mt-3 flex items-center gap-3 rounded-2xl tint-sage p-2.5">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+              className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-ink/70 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            >
+              <img src={presence.spotify.album_art} alt="album art" className="h-full w-full object-cover" />
+              <span className="absolute inset-0 m-auto h-2 w-2 rounded-full bg-card" />
+            </motion.div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sage">listening to spotify</p>
+              <p data-testid="spotify-track-line" className="truncate text-xs font-medium">{presence.spotify.song} — {presence.spotify.artist}</p>
+            </div>
+          </div>
+        ) : presence?.activity && (
           <p data-testid="discord-activity" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-[#43B581]" /> {presence.activity}
           </p>

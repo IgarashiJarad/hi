@@ -98,6 +98,8 @@ def public_user(u: dict, owner: bool = False) -> dict:
     if owner:
         data["email"] = u.get("email")
         data["theme_pack"] = u.get("theme_pack", False)
+        data["views"] = u.get("views", 0)
+        data["referrers"] = sorted(u.get("referrers", []), key=lambda r: r.get("count", 0), reverse=True)[:6]
     return data
 
 
@@ -389,8 +391,10 @@ async def lanyard_lookup(discord_id: str):
     d = payload.get("data") or {}
     status = d.get("discord_status", "offline")
     activity_text = None
+    spotify = None
     if d.get("listening_to_spotify") and d.get("spotify"):
         sp = d["spotify"]
+        spotify = {"song": sp.get("song"), "artist": sp.get("artist"), "album_art": sp.get("album_art_url")}
         activity_text = f"Listening to {sp.get('song')} — {sp.get('artist')}"
     else:
         acts = [a for a in (d.get("activities") or []) if a.get("type") != 4]
@@ -398,9 +402,40 @@ async def lanyard_lookup(discord_id: str):
             a = acts[0]
             verbs = {0: "Playing", 1: "Streaming", 2: "Listening to", 3: "Watching", 5: "Competing in"}
             activity_text = f"{verbs.get(a.get('type'), 'Using')} {a.get('name')}"
-    data = {"monitored": True, "status": status, "activity": activity_text}
+    data = {"monitored": True, "status": status, "activity": activity_text, "spotify": spotify}
     _lanyard_cache[discord_id] = {"at": time.time(), "data": data}
     return data
+
+
+# ---------- Page view tracking ----------
+
+class ViewBody(BaseModel):
+    referrer: str = ""
+
+@api_router.post("/profile/{username}/view")
+async def track_view(username: str, body: ViewBody):
+    username = username.strip().lower()
+    if not await db.users.find_one({"username": username}):
+        raise HTTPException(404, "Profile not found")
+    await db.users.update_one({"username": username}, {"$inc": {"views": 1}})
+    host = ""
+    if body.referrer:
+        try:
+            from urllib.parse import urlparse
+            host = (urlparse(body.referrer).hostname or "").replace("www.", "")
+        except Exception:
+            host = ""
+    if host and "emergentagent.com" not in host:
+        res = await db.users.update_one(
+            {"username": username, "referrers.host": host},
+            {"$inc": {"referrers.$.count": 1}},
+        )
+        if res.matched_count == 0:
+            await db.users.update_one(
+                {"username": username},
+                {"$push": {"referrers": {"host": host, "count": 1}}},
+            )
+    return {"ok": True}
 
 
 # ---------- Link click tracking ----------

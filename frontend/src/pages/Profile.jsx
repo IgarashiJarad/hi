@@ -70,9 +70,9 @@ export default function Profile() {
   if (notFound) {
     return (
       <div data-testid="profile-not-found" className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="font-serif text-5xl italic text-ink/70">quiet here…</p>
+        <p className="font-serif text-5xl italic text-foreground/70">quiet here…</p>
         <p className="text-sm text-muted-foreground">@{username} hasn't been claimed yet.</p>
-        <Link data-testid="claim-this-btn" to={`/register?u=${username}`} className="rounded-full bg-ink px-5 py-2.5 text-sm text-paper transition-colors hover:bg-ink/85">
+        <Link data-testid="claim-this-btn" to={`/register?u=${username}`} className="rounded-full bg-[#8B5CF6] px-5 py-2.5 text-sm text-white shadow-[0_0_24px_rgba(139,92,246,0.4)] transition-colors hover:bg-[#7C4DEF]">
           claim it
         </Link>
       </div>
@@ -82,7 +82,7 @@ export default function Profile() {
   if (!profile) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-[#8B5CF6]" />
       </div>
     );
   }

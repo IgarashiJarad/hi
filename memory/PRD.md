@@ -40,6 +40,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 6)
 - Landing redesign inspired by guns.lol (dark plum, glowing purple CTAs, floating glass pill nav, centered masked headline "Everything you are, right here.", tilted overlapping product mock cards — stats sparkline, live profile w/ online badge + Spotify vinyl, theme picker — purple glow shadows, dark marquee/features/playground). New component LandingDark.jsx; playground Discord card inherits dusk theme. Profile/auth/settings pages unchanged.
 
+## Implemented (2026-08-27, iteration 7)
+- App-wide dark plum reskin: root palette now deep plum + purple (#8B5CF6) accent; login/register and settings fully restyled (dark cards, purple CTAs, purple sparkline/focus rings/toggles). Public profile pages still honor the visitor-facing per-user theme (Paper/Charcoal/Moss/Ember/Dusk + auto day/night); settings live-preview pane renders the selected page theme.
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

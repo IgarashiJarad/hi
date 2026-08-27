@@ -76,7 +76,7 @@ export default function AuthPage({ mode }) {
             {isRegister && (
               <>
                 <div>
-                  <div className="flex items-center gap-2 rounded-xl border border-input bg-paper px-4 py-3 focus-within:border-sage">
+                  <div className="flex items-center gap-2 rounded-xl border border-input bg-secondary px-4 py-3 focus-within:border-sage">
                     <span className="font-mono text-sm text-muted-foreground">dontblink.page/</span>
                     <input
                       data-testid="register-username-input"
@@ -101,7 +101,7 @@ export default function AuthPage({ mode }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email"
                   required
-                  className="w-full rounded-xl border border-input bg-paper px-4 py-3 text-sm outline-none transition-colors focus:border-sage"
+                  className="w-full rounded-xl border border-input bg-secondary px-4 py-3 text-sm outline-none transition-colors focus:border-[#8B5CF6]"
                 />
               </>
             )}
@@ -112,7 +112,7 @@ export default function AuthPage({ mode }) {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="email or username"
                 required
-                className="w-full rounded-xl border border-input bg-paper px-4 py-3 text-sm outline-none transition-colors focus:border-sage"
+                className="w-full rounded-xl border border-input bg-secondary px-4 py-3 text-sm outline-none transition-colors focus:border-[#8B5CF6]"
               />
             )}
             <input
@@ -123,7 +123,7 @@ export default function AuthPage({ mode }) {
               placeholder={isRegister ? "password (6+ chars)" : "password"}
               required
               minLength={isRegister ? 6 : 1}
-              className="w-full rounded-xl border border-input bg-paper px-4 py-3 text-sm outline-none transition-colors focus:border-sage"
+              className="w-full rounded-xl border border-input bg-secondary px-4 py-3 text-sm outline-none transition-colors focus:border-[#8B5CF6]"
             />
 
             {error && <p data-testid="auth-error" className="text-sm text-destructive">{error}</p>}
@@ -132,7 +132,7 @@ export default function AuthPage({ mode }) {
               data-testid={isRegister ? "register-submit-btn" : "login-submit-btn"}
               type="submit"
               disabled={busy || (isRegister && availability === false)}
-              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-ink py-3 text-sm font-medium text-paper transition-colors hover:bg-ink/85 disabled:opacity-40"
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#8B5CF6] py-3 text-sm font-medium text-white transition-colors hover:bg-[#7C4DEF] disabled:opacity-40"
             >
               {busy ? "one moment…" : isRegister ? "create my page" : "log in"}
               {!busy && <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" />}

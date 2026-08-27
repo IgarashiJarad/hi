@@ -23,7 +23,7 @@ function Sparkline({ data }) {
     .join(" ");
   return (
     <svg data-testid="views-sparkline" viewBox={`0 0 ${w} ${h}`} className="mt-1 w-full" preserveAspectRatio="none">
-      <polyline points={pts} fill="none" stroke="#3F5E4D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -238,7 +238,7 @@ export default function Settings() {
     }
   };
 
-  const field = "w-full rounded-xl border border-input bg-paper px-4 py-3 text-sm outline-none transition-colors focus:border-sage";
+  const field = "w-full rounded-xl border border-input bg-secondary px-4 py-3 text-sm outline-none transition-colors focus:border-[#8B5CF6]";
   const label = "mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground";
 
   return (
@@ -248,7 +248,7 @@ export default function Settings() {
           <Link to="/" className="font-serif text-xl font-semibold italic">dontblink</Link>
           <h1 className="mt-2 font-display text-3xl font-bold">Settings</h1>
           {location.state?.welcome && (
-            <p className="mt-1 text-sm text-sage">Welcome in — make it yours below.</p>
+            <p className="mt-1 text-sm text-[#A78BFA]">Welcome in — make it yours below.</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export default function Settings() {
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <h2 className="mb-5 font-display text-lg font-bold">Profile</h2>
             <div className="mb-5 flex items-center gap-4">
-              <div data-testid="settings-avatar-preview" className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-sage">
+              <div data-testid="settings-avatar-preview" className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-[#A78BFA]">
                 {user.avatar_url ? (
                   <img src={`${process.env.REACT_APP_BACKEND_URL}${user.avatar_url}`} alt="avatar" className="h-full w-full object-cover" />
                 ) : (
@@ -285,11 +285,11 @@ export default function Settings() {
                 )}
               </div>
               <div className="flex gap-2">
-                <button data-testid="avatar-upload-btn" onClick={() => avatarInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-paper px-4 py-2 text-sm transition-colors hover:bg-secondary">
+                <button data-testid="avatar-upload-btn" onClick={() => avatarInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-4 py-2 text-sm transition-colors hover:bg-secondary">
                   <ImagePlus size={14} /> upload photo
                 </button>
                 {user.avatar_url && (
-                  <button data-testid="avatar-remove-btn" onClick={removeAvatar} className="rounded-full border border-border bg-paper px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-destructive">
+                  <button data-testid="avatar-remove-btn" onClick={removeAvatar} className="rounded-full border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-destructive">
                     remove
                   </button>
                 )}
@@ -365,12 +365,12 @@ export default function Settings() {
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <div className="mb-1 flex items-center justify-between gap-2">
               <h2 className="font-display text-lg font-bold">Page theme</h2>
-              <div data-testid="mode-toggle" className="flex items-center gap-1 rounded-full border border-border bg-paper p-1">
+              <div data-testid="mode-toggle" className="flex items-center gap-1 rounded-full border border-border bg-secondary p-1">
                 <button
                   data-testid="mode-light-btn"
                   onClick={() => applyTheme("light")}
                   title="light mode"
-                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "light" ? "bg-ink text-paper" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "light" ? "bg-[#8B5CF6] text-white" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Sun size={13} />
                 </button>
@@ -378,14 +378,14 @@ export default function Settings() {
                   data-testid="mode-dark-btn"
                   onClick={() => applyTheme("dark")}
                   title="dark mode"
-                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "dark" ? "bg-ink text-paper" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "dark" ? "bg-[#8B5CF6] text-white" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Moon size={13} />
                 </button>
               </div>
             </div>
             <p className="mb-5 text-xs text-muted-foreground">Paper and Charcoal are free — the pack ({THEME_PACK_PRICE}) unlocks every theme, forever. Changes save instantly.</p>
-            <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-paper px-4 py-3">
+            <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary px-4 py-3">
               <div>
                 <p className="text-sm font-medium">auto day / night</p>
                 <p className="text-xs text-muted-foreground">Paper by day, Charcoal by night — on your visitors' clocks</p>
@@ -402,19 +402,19 @@ export default function Settings() {
                     data-testid={`theme-option-${t.id}`}
                     onClick={() => (locked ? unlockThemes() : applyTheme(t.id))}
                     title={t.desc}
-                    className={`rounded-2xl border p-2 text-left transition-all duration-300 ${active ? "border-sage shadow-[0_8px_24px_rgba(63,94,77,0.15)]" : "border-border hover:border-ink/25"}`}
+                    className={`rounded-2xl border p-2 text-left transition-all duration-300 ${active ? "border-[#8B5CF6] shadow-[0_8px_28px_rgba(139,92,246,0.3)]" : "border-border hover:border-[#8B5CF6]/50"}`}
                   >
                     <ThemePreview id={t.id} locked={locked} />
                     <div className="mt-2 flex items-center justify-between px-1 pb-0.5">
                       <span className="text-xs font-medium">{t.name}</span>
-                      {locked ? <Lock size={11} className="text-muted-foreground" /> : active ? <Check size={12} className="text-sage" /> : null}
+                      {locked ? <Lock size={11} className="text-muted-foreground" /> : active ? <Check size={12} className="text-[#A78BFA]" /> : null}
                     </div>
                   </button>
                 );
               })}
             </div>
             {!user.theme_pack && (
-              <button data-testid="unlock-themes-btn" onClick={unlockThemes} disabled={unlocking} className="mt-4 w-full rounded-xl bg-terracotta py-3 text-sm font-semibold text-white transition-colors hover:bg-terracotta/90 disabled:opacity-50">
+              <button data-testid="unlock-themes-btn" onClick={unlockThemes} disabled={unlocking} className="mt-4 w-full rounded-xl bg-[#8B5CF6] py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.35)] transition-colors hover:bg-[#7C4DEF] disabled:opacity-50">
                 {unlocking ? "opening checkout…" : `unlock all themes · ${THEME_PACK_PRICE} one-time`}
               </button>
             )}
@@ -432,13 +432,13 @@ export default function Settings() {
                 placeholder="https://…"
                 className={field}
               />
-              <button data-testid="add-link-btn" onClick={addLink} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-ink px-4 text-sm text-paper transition-colors hover:bg-ink/85">
+              <button data-testid="add-link-btn" onClick={addLink} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#8B5CF6] px-4 text-sm text-white transition-colors hover:bg-[#7C4DEF]">
                 <Plus size={14} /> add
               </button>
             </div>
             <ul data-testid="links-editor-list" className="space-y-2">
               {links.map((link, i) => (
-                <li key={`${link.url}-${i}`} data-testid={`link-editor-item-${i}`} className="flex items-center gap-2 rounded-xl border border-border bg-paper px-3 py-2.5">
+                <li key={`${link.url}-${i}`} data-testid={`link-editor-item-${i}`} className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-3 py-2.5">
                   <Favicon url={link.url} size={16} />
                   <input
                     data-testid={`link-label-input-${i}`}
@@ -462,7 +462,7 @@ export default function Settings() {
             data-testid="save-settings-button"
             onClick={save}
             disabled={saving}
-            className="w-full rounded-2xl bg-sage py-4 text-sm font-semibold text-paper transition-colors hover:bg-sage/90 disabled:opacity-50"
+            className="w-full rounded-2xl bg-[#8B5CF6] py-4 text-sm font-semibold text-white shadow-[0_0_28px_rgba(139,92,246,0.35)] transition-colors hover:bg-[#7C4DEF] disabled:opacity-50"
           >
             {saving ? "saving…" : "save everything"}
           </button>
@@ -473,7 +473,7 @@ export default function Settings() {
             <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">live preview</p>
             <div data-testid="settings-preview" data-theme={theme} className="space-y-5 rounded-3xl border border-border bg-background p-5 text-foreground transition-colors duration-500">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-sage">
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-[#A78BFA]">
                   {user.avatar_url ? (
                     <img src={`${process.env.REACT_APP_BACKEND_URL}${user.avatar_url}`} alt="" className="h-full w-full object-cover" />
                   ) : discordPreview.data?.avatar_url ? (

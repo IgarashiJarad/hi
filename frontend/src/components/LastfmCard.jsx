@@ -9,7 +9,7 @@ function Equalizer() {
       {[0, 1, 2, 3].map((i) => (
         <span
           key={i}
-          className="eq-bar w-[3px] rounded-full bg-[#BA2727]"
+          className="eq-bar w-[3px] rounded-full bg-[#EF4444]"
           style={{ height: "100%", animationDelay: `${i * 0.18}s`, animationDuration: `${0.7 + i * 0.13}s` }}
         />
       ))}
@@ -86,7 +86,7 @@ export function LastfmCard({ data, loading, error, onRetry }) {
         <div data-testid="lastfm-now-playing" className="mb-4 flex items-center gap-4 rounded-2xl tint-lastfm p-3.5">
           <Vinyl image={now.image_url} playing />
           <div className="min-w-0 flex-1">
-            <p className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#BA2727]">
+            <p className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#EF4444]">
               <Equalizer /> now playing
             </p>
             <p data-testid="lastfm-now-track" className="truncate font-mono text-sm font-medium">{now.name}</p>

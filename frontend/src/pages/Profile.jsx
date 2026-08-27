@@ -88,13 +88,15 @@ export default function Profile() {
   }
 
   const name = profile.display_name || profile.username;
+  const hour = new Date().getHours();
+  const resolvedTheme = profile.theme_auto ? (hour >= 6 && hour < 18 ? "light" : "dark") : profile.theme || "light";
   const avatar = profile.avatar_url
     ? `${process.env.REACT_APP_BACKEND_URL}${profile.avatar_url}`
     : discord.data?.avatar_url;
   const isOwn = user?.username === profile.username;
 
   return (
-    <div data-testid="profile-page" data-theme={profile.theme || "light"} className="min-h-screen bg-background text-foreground transition-colors duration-500">
+    <div data-testid="profile-page" data-theme={resolvedTheme} className="min-h-screen bg-background text-foreground transition-colors duration-500">
       <motion.main
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}

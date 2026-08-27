@@ -11,6 +11,22 @@ import { DiscordCard } from "../components/DiscordCard";
 import { LastfmCard } from "../components/LastfmCard";
 import { prettyLabel, getDomain } from "../lib/favicon";
 import { THEMES, THEME_PACK_PRICE } from "../lib/themes";
+import { Switch } from "../components/ui/switch";
+
+function Sparkline({ data }) {
+  if (!data?.length) return null;
+  const max = Math.max(...data.map((d) => d.count), 1);
+  const w = 240;
+  const h = 36;
+  const pts = data
+    .map((d, i) => `${(i / (data.length - 1 || 1)) * w},${h - (d.count / max) * (h - 6) - 3}`)
+    .join(" ");
+  return (
+    <svg data-testid="views-sparkline" viewBox={`0 0 ${w} ${h}`} className="mt-1 w-full" preserveAspectRatio="none">
+      <polyline points={pts} fill="none" stroke="#3F5E4D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function ThemePreview({ id, locked }) {
   return (
@@ -42,6 +58,7 @@ export default function Settings() {
   const [newUrl, setNewUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [theme, setTheme] = useState(user.theme || "light");
+  const [themeAuto, setThemeAuto] = useState(user.theme_auto || false);
   const [unlocking, setUnlocking] = useState(false);
   const avatarInput = useRef(null);
   const [params, setParams] = useSearchParams();
@@ -123,11 +140,32 @@ export default function Settings() {
         lastfm_username: lastfmUser.trim() || null,
         links,
         theme: t,
+        theme_auto: themeAuto,
       });
       setUser(r.data);
       toast.success(t === "dark" ? "Switched to dark mode" : t === "light" ? "Switched to light mode" : "Theme applied");
     } catch (e) {
       toast.error(errMsg(e, "Could not apply theme"));
+    }
+  };
+
+  const toggleAuto = async (val) => {
+    setThemeAuto(val);
+    try {
+      const r = await api.put("/auth/profile", {
+        display_name: displayName,
+        bio,
+        discord_id: discordId.trim() || null,
+        lastfm_username: lastfmUser.trim() || null,
+        links,
+        theme,
+        theme_auto: val,
+      });
+      setUser(r.data);
+      toast.success(val ? "Auto day/night on — Paper by day, Charcoal by night" : "Auto day/night off");
+    } catch (e) {
+      setThemeAuto(!val);
+      toast.error(errMsg(e, "Could not save"));
     }
   };
 
@@ -189,6 +227,7 @@ export default function Settings() {
         lastfm_username: lastfmUser.trim() || null,
         links,
         theme,
+        theme_auto: themeAuto,
       });
       setUser(r.data);
       toast.success("Saved — your page is updated");
@@ -265,7 +304,9 @@ export default function Settings() {
 
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <h2 className="mb-5 font-display text-lg font-bold">Your stats</h2>
-            <div className="flex items-baseline gap-2">
+            <Sparkline data={user.views_daily} />
+            <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">last 14 days</p>
+            <div className="mt-2 flex items-baseline gap-2">
               <span data-testid="stats-total-views" className="font-display text-4xl font-bold">{user.views || 0}</span>
               <span className="text-sm text-muted-foreground">page visits</span>
             </div>
@@ -344,6 +385,13 @@ export default function Settings() {
               </div>
             </div>
             <p className="mb-5 text-xs text-muted-foreground">Paper and Charcoal are free — the pack ({THEME_PACK_PRICE}) unlocks every theme, forever. Changes save instantly.</p>
+            <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-paper px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">auto day / night</p>
+                <p className="text-xs text-muted-foreground">Paper by day, Charcoal by night — on your visitors' clocks</p>
+              </div>
+              <Switch data-testid="theme-auto-switch" checked={themeAuto} onCheckedChange={toggleAuto} />
+            </div>
             <div data-testid="theme-grid" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {THEMES.map((t) => {
                 const locked = !t.free && !user.theme_pack;

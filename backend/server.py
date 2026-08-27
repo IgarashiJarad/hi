@@ -94,12 +94,19 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "links": u.get("links", []),
         "avatar_url": f"/api/files/{u['avatar_path']}" if u.get("avatar_path") else None,
         "theme": u.get("theme", "light"),
+        "theme_auto": u.get("theme_auto", False),
     }
     if owner:
         data["email"] = u.get("email")
         data["theme_pack"] = u.get("theme_pack", False)
         data["views"] = u.get("views", 0)
         data["referrers"] = sorted(u.get("referrers", []), key=lambda r: r.get("count", 0), reverse=True)[:6]
+        by_day = u.get("views_by_day", {})
+        today = datetime.now(timezone.utc).date()
+        data["views_daily"] = [
+            {"date": (today - timedelta(days=i)).isoformat(), "count": by_day.get((today - timedelta(days=i)).isoformat(), 0)}
+            for i in range(13, -1, -1)
+        ]
     return data
 
 
@@ -161,6 +168,7 @@ class ProfileUpdate(BaseModel):
     lastfm_username: Optional[str] = None
     links: List[LinkItem] = []
     theme: str = "light"
+    theme_auto: bool = False
 
 
 @api_router.post("/auth/register")
@@ -236,6 +244,7 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         "lastfm_username": body.lastfm_username.strip() if body.lastfm_username else None,
         "links": [{**l.model_dump(), "clicks": existing_clicks.get(l.url, 0)} for l in body.links],
         "theme": body.theme,
+        "theme_auto": body.theme_auto,
     }
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     fresh = await db.users.find_one({"_id": user["_id"]})
@@ -417,7 +426,8 @@ async def track_view(username: str, body: ViewBody):
     username = username.strip().lower()
     if not await db.users.find_one({"username": username}):
         raise HTTPException(404, "Profile not found")
-    await db.users.update_one({"username": username}, {"$inc": {"views": 1}})
+    today = datetime.now(timezone.utc).date().isoformat()
+    await db.users.update_one({"username": username}, {"$inc": {"views": 1, f"views_by_day.{today}": 1}})
     host = ""
     if body.referrer:
         try:

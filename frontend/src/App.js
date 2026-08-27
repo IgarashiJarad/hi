@@ -44,6 +44,23 @@ function AppInner() {
     };
   }, []);
 
+  useEffect(() => {
+    let prevTitle = document.title;
+    const onVis = () => {
+      const link = document.querySelector("link[rel='icon']");
+      if (document.hidden) {
+        prevTitle = document.title;
+        if (link) link.href = "/favicon-wink.svg";
+        document.title = "don't blink…";
+      } else {
+        if (link) link.href = "/favicon-eye.svg";
+        document.title = prevTitle;
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   return (
     <>
       <ScrollTop />

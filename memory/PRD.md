@@ -32,6 +32,11 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Page view counter: POST /api/profile/{username}/view on every public page load; settings "Your stats" shows total visits + top referrers (host-normalized, favicon per source, top 6); stats only visible to owner
 - Spotify vinyl art: Lanyard proxy now passes album_art_url; Discord card shows spinning vinyl with live album cover + song/artist while listening to Spotify (falls back to activity pill otherwise)
 
+## Implemented (2026-08-27, iteration 5)
+- Blink favicon: custom eye SVG favicon; on tab hide it swaps to a closed-eye "wink" icon and the title changes to "don't blink…", restoring on return
+- Theme scheduling: settings "auto day / night" switch (theme_auto field); profile resolves Paper 06:00-18:00, Charcoal otherwise, on the visitor's clock
+- View sparkline: views tracked per day (views_by_day); settings stats shows a 14-day SVG sparkline above the total
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

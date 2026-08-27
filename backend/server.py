@@ -133,6 +133,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "youtube_input": u.get("youtube_input"),
         "twitch_channel": u.get("twitch_channel"),
         "pinned_track": u.get("pinned_track"),
+        "favorite_track": u.get("favorite_track"),
     }
     if owner:
         data["email"] = u.get("email")
@@ -235,6 +236,7 @@ class ProfileUpdate(BaseModel):
     youtube_input: Optional[str] = None
     twitch_channel: Optional[str] = None
     pinned_track: Optional[str] = None
+    favorite_track: Optional[str] = None
 
 
 async def next_uid() -> int:
@@ -328,6 +330,7 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         "youtube_input": body.youtube_input.strip() if body.youtube_input else None,
         "twitch_channel": re.sub(r"[^a-zA-Z0-9_]", "", body.twitch_channel).lower() if body.twitch_channel else None,
         "pinned_track": body.pinned_track.strip() if body.pinned_track else None,
+        "favorite_track": body.favorite_track.strip() if body.favorite_track else None,
     }
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     fresh = await db.users.find_one({"_id": user["_id"]})

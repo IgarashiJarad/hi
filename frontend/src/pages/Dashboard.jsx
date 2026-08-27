@@ -94,6 +94,7 @@ export default function Dashboard() {
   const [youtubeInput, setYoutubeInput] = useState(user.youtube_input || "");
   const [twitchChannel, setTwitchChannel] = useState(user.twitch_channel || "");
   const [pinnedTrack, setPinnedTrack] = useState(user.pinned_track || "");
+  const [favoriteTrack, setFavoriteTrack] = useState(user.favorite_track || "");
   const [newUsername, setNewUsername] = useState(user.username);
   const [unameStatus, setUnameStatus] = useState(null);
 
@@ -176,6 +177,7 @@ export default function Dashboard() {
     youtube_input: youtubeInput.trim() || null,
     twitch_channel: twitchChannel.trim() || null,
     pinned_track: pinnedTrack.trim() || null,
+    favorite_track: favoriteTrack.trim() || null,
     ...over,
   });
 
@@ -706,6 +708,16 @@ export default function Dashboard() {
                     placeholder="song — artist (plays on your page when you're not listening)"
                     className={field}
                   />
+                  <label className={`${label} mt-4`} htmlFor="favorite-track-input">favorite song</label>
+                  <input
+                    id="favorite-track-input"
+                    data-testid="favorite-track-input"
+                    value={favoriteTrack}
+                    onChange={(e) => setFavoriteTrack(e.target.value)}
+                    placeholder="your anthem — plays automatically for visitors"
+                    className={field}
+                  />
+                  <p className="mt-2 text-[11px] text-white/30">Visitors can pause it or turn the volume down — a little player floats in the corner of your page.</p>
                   {(lastfmPreview.loading || lastfmPreview.data || lastfmPreview.error) && (
                     <div className="mt-4">
                       <LastfmCard data={lastfmPreview.data} loading={lastfmPreview.loading} error={lastfmPreview.error} onRetry={testLastfm} />

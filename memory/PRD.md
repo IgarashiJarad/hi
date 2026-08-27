@@ -100,6 +100,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 21)
 - Twitch clip fallback: offline channels now also fetch their all-time top clip via Twitch GQL (public client, persisted ClipsCards__User hash 90c33f5e…). Profile chain: live stream → latest VOD → top clip embed → channel link note
 
+## Implemented (2026-08-27, iteration 22)
+- Favorite song autoplay: favorite_track field (dashboard Connections); profile loads a floating mini-player (bottom-right) with cover art, pause/play and volume slider for visitors; attempts autoplay on load, falls back to a pulsing "tap to play" state when the browser blocks sound-autoplay. Audio via shared /api/track/preview (Deezer MP3)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

@@ -10,6 +10,7 @@ import { LastfmCard } from "../components/LastfmCard";
 import { SocialLinks } from "../components/SocialLinks";
 import { RolePills } from "../components/RolePills";
 import { YouTubeCard, TwitchCard } from "../components/MediaCards";
+import { AutoPlayMusic } from "../components/AutoPlayMusic";
 
 export default function Profile() {
   const { username } = useParams();
@@ -205,8 +206,9 @@ export default function Profile() {
           );
         })()}
 
-        <footer className="mt-14 text-center">
-          <Link data-testid="made-with-badge" to="/" className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground">
+        {profile.favorite_track && <AutoPlayMusic query={profile.favorite_track} />}
+
+        <footer className="mt-14 text-center">          <Link data-testid="made-with-badge" to="/" className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground">
             made with <span className="font-serif italic">dontblink</span>
           </Link>
         </footer>

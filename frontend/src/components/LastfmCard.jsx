@@ -83,7 +83,7 @@ export function LastfmCard({ data, loading, error, onRetry }) {
       </div>
 
       {now ? (
-        <div data-testid="lastfm-now-playing" className="mb-4 flex items-center gap-4 rounded-2xl bg-[#FDF2F2] p-3.5">
+        <div data-testid="lastfm-now-playing" className="mb-4 flex items-center gap-4 rounded-2xl tint-lastfm p-3.5">
           <Vinyl image={now.image_url} playing />
           <div className="min-w-0 flex-1">
             <p className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#BA2727]">

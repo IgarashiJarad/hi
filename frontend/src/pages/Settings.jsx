@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ArrowUp, ArrowDown, Copy, LogOut, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Copy, LogOut, ExternalLink, ImagePlus, Lock, Check, MousePointerClick } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { api, errMsg } from "../lib/api";
@@ -10,6 +10,24 @@ import { Favicon } from "../components/FaviconImg";
 import { DiscordCard } from "../components/DiscordCard";
 import { LastfmCard } from "../components/LastfmCard";
 import { prettyLabel, getDomain } from "../lib/favicon";
+import { THEMES, THEME_PACK_PRICE } from "../lib/themes";
+
+function ThemePreview({ id, locked }) {
+  return (
+    <div data-theme={id} className="relative h-24 overflow-hidden rounded-xl border border-border bg-background p-2.5">
+      <div className="mx-auto mb-1.5 h-4 w-4 rounded-full border border-border bg-secondary" />
+      <div className="mx-auto mb-1 h-1.5 w-10 rounded-full bg-foreground/70" />
+      <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-muted-foreground/50" />
+      <div className="mb-1 h-3 rounded-md border border-border tint-discord" />
+      <div className="h-3 rounded-md border border-border bg-card" />
+      {locked && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+          <Lock size={15} className="text-foreground/70" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Settings() {
   const { user, setUser, logout } = useAuth();
@@ -23,6 +41,77 @@ export default function Settings() {
   const [links, setLinks] = useState(user.links || []);
   const [newUrl, setNewUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [theme, setTheme] = useState(user.theme || "light");
+  const [unlocking, setUnlocking] = useState(false);
+  const avatarInput = useRef(null);
+  const [params, setParams] = useSearchParams();
+
+  useEffect(() => {
+    const sessionId = params.get("session_id");
+    if (params.get("billing") === "cancel") {
+      toast.error("Checkout cancelled — no charge");
+      setParams({}, { replace: true });
+      return;
+    }
+    if (params.get("billing") !== "success" || !sessionId) return;
+    let tries = 0;
+    const poll = setInterval(async () => {
+      tries += 1;
+      try {
+        const r = await api.get(`/payments/status/${sessionId}`);
+        if (r.data.payment_status === "paid") {
+          clearInterval(poll);
+          const meRes = await api.get("/auth/me");
+          setUser(meRes.data);
+          toast.success("Theme pack unlocked — enjoy the new looks");
+          setParams({}, { replace: true });
+        }
+      } catch { /* keep polling */ }
+      if (tries > 12) {
+        clearInterval(poll);
+        toast("Still confirming your payment — it will appear shortly");
+        setParams({}, { replace: true });
+      }
+    }, 2000);
+    return () => clearInterval(poll);
+  }, [params, setParams, setUser]);
+
+  const uploadAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const r = await api.post("/auth/avatar", form);
+      setUser(r.data);
+      toast.success("Profile photo updated");
+    } catch (err) {
+      toast.error(errMsg(err, "Upload failed"));
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const removeAvatar = async () => {
+    try {
+      const r = await api.delete("/auth/avatar");
+      setUser(r.data);
+      toast.success("Photo removed");
+    } catch {
+      toast.error("Could not remove photo");
+    }
+  };
+
+  const unlockThemes = async () => {
+    setUnlocking(true);
+    try {
+      const r = await api.post("/payments/checkout", { lookup_key: "theme_pack", origin_url: window.location.origin });
+      window.location.href = r.data.checkout_url;
+    } catch (err) {
+      toast.error(errMsg(err, "Could not start checkout"));
+      setUnlocking(false);
+    }
+  };
 
   const [discordPreview, setDiscordPreview] = useState({ loading: false, data: null, error: null });
   const [lastfmPreview, setLastfmPreview] = useState({ loading: false, data: null, error: null });
@@ -81,6 +170,7 @@ export default function Settings() {
         discord_id: discordId.trim() || null,
         lastfm_username: lastfmUser.trim() || null,
         links,
+        theme,
       });
       setUser(r.data);
       toast.success("Saved — your page is updated");
@@ -129,6 +219,26 @@ export default function Settings() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }} className="space-y-8">
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <h2 className="mb-5 font-display text-lg font-bold">Profile</h2>
+            <div className="mb-5 flex items-center gap-4">
+              <div data-testid="settings-avatar-preview" className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-sage">
+                {user.avatar_url ? (
+                  <img src={`${process.env.REACT_APP_BACKEND_URL}${user.avatar_url}`} alt="avatar" className="h-full w-full object-cover" />
+                ) : (
+                  (displayName || user.username)[0]?.toUpperCase()
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button data-testid="avatar-upload-btn" onClick={() => avatarInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-paper px-4 py-2 text-sm transition-colors hover:bg-secondary">
+                  <ImagePlus size={14} /> upload photo
+                </button>
+                {user.avatar_url && (
+                  <button data-testid="avatar-remove-btn" onClick={removeAvatar} className="rounded-full border border-border bg-paper px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-destructive">
+                    remove
+                  </button>
+                )}
+              </div>
+              <input ref={avatarInput} data-testid="avatar-file-input" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+            </div>
             <label className={label} htmlFor="display-name-input">display name</label>
             <input id="display-name-input" data-testid="display-name-input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} className={`${field} mb-4`} />
             <label className={label} htmlFor="bio-input">bio</label>
@@ -139,6 +249,7 @@ export default function Settings() {
             <h2 className="mb-1 font-display text-lg font-bold">Discord</h2>
             <p className="mb-5 text-xs text-muted-foreground">
               Discord → user settings → advanced → enable developer mode → right-click your profile → copy user ID.
+              For the live "online now" badge, join the Lanyard Discord server once (discord.gg/lanyard) — it watches your presence.
             </p>
             <div className="flex gap-2">
               <input
@@ -172,6 +283,40 @@ export default function Settings() {
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-bold">Page theme</h2>
+              {!user.theme_pack && <span className="text-xs text-muted-foreground">3 more in the pack · {THEME_PACK_PRICE}</span>}
+            </div>
+            <p className="mb-5 text-xs text-muted-foreground">Paper and Charcoal are free — the pack unlocks every theme, forever.</p>
+            <div data-testid="theme-grid" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {THEMES.map((t) => {
+                const locked = !t.free && !user.theme_pack;
+                const active = theme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    data-testid={`theme-option-${t.id}`}
+                    onClick={() => (locked ? unlockThemes() : setTheme(t.id))}
+                    title={t.desc}
+                    className={`rounded-2xl border p-2 text-left transition-all duration-300 ${active ? "border-sage shadow-[0_8px_24px_rgba(63,94,77,0.15)]" : "border-border hover:border-ink/25"}`}
+                  >
+                    <ThemePreview id={t.id} locked={locked} />
+                    <div className="mt-2 flex items-center justify-between px-1 pb-0.5">
+                      <span className="text-xs font-medium">{t.name}</span>
+                      {locked ? <Lock size={11} className="text-muted-foreground" /> : active ? <Check size={12} className="text-sage" /> : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {!user.theme_pack && (
+              <button data-testid="unlock-themes-btn" onClick={unlockThemes} disabled={unlocking} className="mt-4 w-full rounded-xl bg-terracotta py-3 text-sm font-semibold text-white transition-colors hover:bg-terracotta/90 disabled:opacity-50">
+                {unlocking ? "opening checkout…" : `unlock all themes · ${THEME_PACK_PRICE} one-time`}
+              </button>
+            )}
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <h2 className="mb-1 font-display text-lg font-bold">Social links</h2>
             <p className="mb-5 text-xs text-muted-foreground">Paste a link — its icon is found automatically.</p>
             <div className="mb-4 flex gap-2">
@@ -197,6 +342,9 @@ export default function Settings() {
                     onChange={(e) => setLinks(links.map((l, j) => (j === i ? { ...l, label: e.target.value } : l)))}
                     className="w-full min-w-0 bg-transparent text-sm outline-none"
                   />
+                  <span data-testid={`link-clicks-${i}`} title="times tapped" className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
+                    <MousePointerClick size={11} /> {link.clicks || 0}
+                  </span>
                   <button data-testid={`link-up-btn-${i}`} onClick={() => move(i, -1)} className="p-1 text-muted-foreground transition-colors hover:text-foreground"><ArrowUp size={14} /></button>
                   <button data-testid={`link-down-btn-${i}`} onClick={() => move(i, 1)} className="p-1 text-muted-foreground transition-colors hover:text-foreground"><ArrowDown size={14} /></button>
                   <button data-testid={`link-remove-btn-${i}`} onClick={() => setLinks(links.filter((_, j) => j !== i))} className="p-1 text-muted-foreground transition-colors hover:text-destructive"><Trash2 size={14} /></button>
@@ -219,10 +367,12 @@ export default function Settings() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.15 }}>
           <div className="lg:sticky lg:top-10">
             <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">live preview</p>
-            <div data-testid="settings-preview" className="space-y-5 rounded-3xl border border-border bg-white/50 p-5">
+            <div data-testid="settings-preview" data-theme={theme} className="space-y-5 rounded-3xl border border-border bg-background p-5 text-foreground transition-colors duration-500">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-sage-light font-display text-xl font-bold text-sage">
-                  {discordPreview.data?.avatar_url ? (
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full tint-sage font-display text-xl font-bold text-sage">
+                  {user.avatar_url ? (
+                    <img src={`${process.env.REACT_APP_BACKEND_URL}${user.avatar_url}`} alt="" className="h-full w-full object-cover" />
+                  ) : discordPreview.data?.avatar_url ? (
                     <img src={discordPreview.data.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     (displayName || user.username)[0]?.toUpperCase()

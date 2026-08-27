@@ -19,10 +19,18 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Public profile /:username: avatar (Discord avatar if linked), bio, Discord card (banner + avatar + name + copy ID), Last.fm card (spinning vinyl now playing + recent scrobbles, polls 45s), social chips, 404 claim page
 - Test user: wren / wren@example.com / sanctuary123 (see /app/memory/test_credentials.md)
 
+## Implemented (2026-08-27, iteration 2)
+- Live Discord presence: Lanyard proxy (/api/lanyard/{id}, 15s cache) — "online now" badge, status dot, current activity/Spotify on the Discord card; falls back to static "connected" when user isn't in the Lanyard server
+- Link click counts: POST /api/profile/{username}/click increments per-link counters (preserved across saves); shown as tap counts in the settings link editor
+- Page themes: 5 themes (Paper + Charcoal free; Moss, Ember, Dusk paid). Settings shows live mini-previews per theme; profile renders via scoped data-theme CSS vars
+- Paid theme pack via Stripe claimable sandbox ($4.99 one-time, tax handled by Stripe managed payments w/ automatic-tax fallback): checkout → success redirect → status poll grants entitlement; webhook at /api/stripe/webhook; server blocks paid themes with 403 before purchase
+- Profile photo upload: object storage via Emergent integration proxy (sanctuary/avatars/...), served through /api/files/{path}; overrides Discord avatar; remove supported
+
 ## Backlog
-- P1: Custom avatar upload / profile photo override
-- P1: Page view analytics (click counts per link)
-- P2: Dark mode toggle (palette already defined)
-- P2: Discord presence/status via Lanyard (live online status + activity)
-- P2: Custom themes per profile
+- P1: Custom avatar upload / profile photo override — DONE
+- P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)
+- P2: Dark mode toggle — DONE (as free Charcoal theme)
+- P2: Discord presence/status via Lanyard — DONE
+- P2: Custom themes per profile — DONE (paid pack)
 - P3: Custom domain support
+- P3: Total page view counter + referrers

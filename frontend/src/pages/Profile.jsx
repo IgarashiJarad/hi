@@ -16,6 +16,7 @@ export default function Profile() {
   const [notFound, setNotFound] = useState(false);
   const [discord, setDiscord] = useState({ loading: false, data: null, error: null });
   const [lastfm, setLastfm] = useState({ loading: false, data: null, error: null });
+  const [presence, setPresence] = useState(null);
 
   const loadDiscord = useCallback(async (id) => {
     setDiscord({ loading: true, data: null, error: null });
@@ -49,12 +50,20 @@ export default function Profile() {
   useEffect(() => {
     if (!profile) return;
     document.title = `${profile.display_name || profile.username} — sanctuary`;
-    if (profile.discord_id) loadDiscord(profile.discord_id);
+    if (profile.discord_id) {
+      loadDiscord(profile.discord_id);
+      const loadPresence = () =>
+        api.get(`/lanyard/${profile.discord_id}`).then((r) => setPresence(r.data)).catch(() => {});
+      loadPresence();
+      const pt = setInterval(loadPresence, 30000);
+      var clearPresence = () => clearInterval(pt);
+    }
     if (profile.lastfm_username) {
       loadLastfm(profile.lastfm_username, true);
       const t = setInterval(() => loadLastfm(profile.lastfm_username, false), 45000);
-      return () => clearInterval(t);
+      return () => { clearInterval(t); clearPresence && clearPresence(); };
     }
+    return () => clearPresence && clearPresence();
   }, [profile, loadDiscord, loadLastfm]);
 
   if (notFound) {
@@ -78,11 +87,13 @@ export default function Profile() {
   }
 
   const name = profile.display_name || profile.username;
-  const avatar = discord.data?.avatar_url;
+  const avatar = profile.avatar_url
+    ? `${process.env.REACT_APP_BACKEND_URL}${profile.avatar_url}`
+    : discord.data?.avatar_url;
   const isOwn = user?.username === profile.username;
 
   return (
-    <div data-testid="profile-page" className="min-h-screen">
+    <div data-testid="profile-page" data-theme={profile.theme || "light"} className="min-h-screen bg-background text-foreground transition-colors duration-500">
       <motion.main
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -114,12 +125,12 @@ export default function Profile() {
 
         <div className="space-y-5">
           {profile.discord_id && (
-            <DiscordCard data={discord.data} loading={discord.loading} error={discord.error} onRetry={() => loadDiscord(profile.discord_id)} />
+            <DiscordCard data={discord.data} loading={discord.loading} error={discord.error} onRetry={() => loadDiscord(profile.discord_id)} presence={presence} />
           )}
           {profile.lastfm_username && (
             <LastfmCard data={lastfm.data} loading={lastfm.loading} error={lastfm.error} onRetry={() => loadLastfm(profile.lastfm_username, true)} />
           )}
-          <SocialLinks links={profile.links} />
+          <SocialLinks links={profile.links} username={profile.username} />
           {!profile.discord_id && !profile.lastfm_username && !profile.links.length && (
             <p className="rounded-3xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
               a blank canvas — for now

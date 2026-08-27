@@ -2,10 +2,16 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Favicon } from "./FaviconImg";
 import { prettyLabel } from "../lib/favicon";
+import { api } from "../lib/api";
 import { ease } from "./motion";
 
-export function SocialLinks({ links = [] }) {
+export function SocialLinks({ links = [], username }) {
   if (!links.length) return null;
+
+  const track = (url) => {
+    if (!username) return;
+    api.post(`/profile/${username}/click`, { url }).catch(() => {});
+  };
   return (
     <motion.ul
       data-testid="social-links-list"
@@ -24,6 +30,7 @@ export function SocialLinks({ links = [] }) {
             href={link.url}
             target="_blank"
             rel="noreferrer"
+            onClick={() => track(link.url)}
             className="group flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5 hover:border-ink/20 hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)]"
           >
             <Favicon url={link.url} size={18} />

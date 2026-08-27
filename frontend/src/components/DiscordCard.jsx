@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ease } from "./motion";
 
-export function DiscordCard({ data, loading, error, onRetry }) {
+export function DiscordCard({ data, loading, error, onRetry, presence }) {
   const [copied, setCopied] = useState(false);
 
   const copyId = () => {
@@ -18,7 +18,7 @@ export function DiscordCard({ data, loading, error, onRetry }) {
   if (loading) {
     return (
       <div data-testid="discord-card-loading" className="overflow-hidden rounded-3xl border border-border bg-card">
-        <div className="h-24 animate-pulse bg-[#EEF1FF]" />
+        <div className="h-24 animate-pulse tint-discord" />
         <div className="p-5">
           <div className="h-4 w-32 animate-pulse rounded bg-secondary" />
         </div>
@@ -45,6 +45,9 @@ export function DiscordCard({ data, loading, error, onRetry }) {
 
   const name = data.global_name || data.username;
   const accent = data.accent_color ? `#${data.accent_color.toString(16).padStart(6, "0")}` : "#5865F2";
+  const STATUS_COLORS = { online: "#43B581", idle: "#FAA61A", dnd: "#F04747", offline: "#747F8D" };
+  const live = presence?.monitored && presence.status !== "offline";
+  const dotColor = presence?.monitored ? STATUS_COLORS[presence.status] || STATUS_COLORS.offline : "#3F5E4D";
 
   return (
     <motion.div
@@ -85,11 +88,17 @@ export function DiscordCard({ data, loading, error, onRetry }) {
                 {name?.[0]?.toUpperCase()}
               </div>
             )}
-            <span className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-card bg-[#3F5E4D]" />
+            <span data-testid="discord-status-dot" className={`absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-card ${live ? "soft-pulse" : ""}`} style={{ backgroundColor: dotColor }} />
           </div>
-          <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#EEF1FF] px-3 py-1 text-[11px] font-medium text-[#5865F2]">
-            <MessageSquare size={12} /> connected
-          </span>
+          {live ? (
+            <span data-testid="discord-online-badge" className="mb-1 inline-flex items-center gap-1.5 rounded-full tint-sage px-3 py-1 text-[11px] font-medium text-sage">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#43B581] soft-pulse" /> online now
+            </span>
+          ) : (
+            <span className="mb-1 inline-flex items-center gap-1.5 rounded-full tint-discord px-3 py-1 text-[11px] font-medium text-[#5865F2]">
+              <MessageSquare size={12} /> connected
+            </span>
+          )}
         </div>
         <p data-testid="discord-display-name" className="font-display text-lg font-bold leading-tight">{name}</p>
         <div className="mt-0.5 flex items-center gap-2">
@@ -103,6 +112,11 @@ export function DiscordCard({ data, loading, error, onRetry }) {
             {copied ? <Check size={13} /> : <Copy size={13} />}
           </button>
         </div>
+        {presence?.activity && (
+          <p data-testid="discord-activity" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#43B581]" /> {presence.activity}
+          </p>
+        )}
       </div>
     </motion.div>
   );

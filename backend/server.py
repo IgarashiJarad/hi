@@ -7,6 +7,7 @@ load_dotenv(ROOT_DIR / ".env")
 import os
 import re
 import time
+import uuid
 import logging
 from typing import Optional, List, Annotated
 from datetime import datetime, timezone, timedelta
@@ -14,8 +15,10 @@ from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
 import httpx
+import stripe
+import requests as http_requests
 from bson import ObjectId
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -58,6 +61,11 @@ class BaseDocument(BaseModel):
 class LinkItem(BaseModel):
     url: str
     label: Optional[str] = None
+    clicks: int = 0
+
+
+FREE_THEMES = {"light", "dark"}
+ALL_THEMES = {"light", "dark", "moss", "ember", "dusk"}
 
 
 class User(BaseDocument):
@@ -69,11 +77,14 @@ class User(BaseDocument):
     discord_id: Optional[str] = None
     lastfm_username: Optional[str] = None
     links: List[LinkItem] = []
+    avatar_path: Optional[str] = None
+    theme: str = "light"
+    theme_pack: bool = False
     created_at: str = ""
 
 
-def public_user(u: dict) -> dict:
-    return {
+def public_user(u: dict, owner: bool = False) -> dict:
+    data = {
         "id": str(u["_id"]),
         "username": u["username"],
         "display_name": u.get("display_name", ""),
@@ -81,7 +92,13 @@ def public_user(u: dict) -> dict:
         "discord_id": u.get("discord_id"),
         "lastfm_username": u.get("lastfm_username"),
         "links": u.get("links", []),
+        "avatar_url": f"/api/files/{u['avatar_path']}" if u.get("avatar_path") else None,
+        "theme": u.get("theme", "light"),
     }
+    if owner:
+        data["email"] = u.get("email")
+        data["theme_pack"] = u.get("theme_pack", False)
+    return data
 
 
 # ---------- Auth ----------
@@ -141,6 +158,7 @@ class ProfileUpdate(BaseModel):
     discord_id: Optional[str] = None
     lastfm_username: Optional[str] = None
     links: List[LinkItem] = []
+    theme: str = "light"
 
 
 @api_router.post("/auth/register")
@@ -170,7 +188,7 @@ async def register(body: RegisterBody):
     }
     res = await db.users.insert_one(doc)
     doc["_id"] = res.inserted_id
-    return {"token": make_token(str(res.inserted_id)), "user": public_user(doc)}
+    return {"token": make_token(str(res.inserted_id)), "user": public_user(doc, owner=True)}
 
 
 @api_router.post("/auth/login")
@@ -179,12 +197,12 @@ async def login(body: LoginBody):
     user = await db.users.find_one({"$or": [{"email": ident}, {"username": ident}]})
     if not user or not verify_password(body.password, user["password_hash"]):
         raise HTTPException(401, "Wrong credentials")
-    return {"token": make_token(str(user["_id"])), "user": public_user(user)}
+    return {"token": make_token(str(user["_id"])), "user": public_user(user, owner=True)}
 
 
 @api_router.get("/auth/me")
 async def me(user: dict = Depends(current_user)):
-    return public_user(user)
+    return public_user(user, owner=True)
 
 
 @api_router.put("/auth/profile")
@@ -199,21 +217,27 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         raise HTTPException(400, "Last.fm username too long")
     if len(body.links) > 12:
         raise HTTPException(400, "Maximum 12 links")
+    if body.theme not in ALL_THEMES:
+        raise HTTPException(400, "Unknown theme")
+    if body.theme not in FREE_THEMES and not user.get("theme_pack"):
+        raise HTTPException(403, "That theme is part of the paid theme pack")
     for link in body.links:
         if not re.match(r"^https?://", link.url):
             raise HTTPException(400, f"Link must start with http:// or https:// : {link.url}")
         if link.label and len(link.label) > 40:
             raise HTTPException(400, "Link label too long")
+    existing_clicks = {l.get("url"): l.get("clicks", 0) for l in user.get("links", [])}
     update = {
         "display_name": body.display_name.strip(),
         "bio": body.bio.strip(),
         "discord_id": body.discord_id.strip() if body.discord_id else None,
         "lastfm_username": body.lastfm_username.strip() if body.lastfm_username else None,
-        "links": [l.model_dump() for l in body.links],
+        "links": [{**l.model_dump(), "clicks": existing_clicks.get(l.url, 0)} for l in body.links],
+        "theme": body.theme,
     }
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     fresh = await db.users.find_one({"_id": user["_id"]})
-    return public_user(fresh)
+    return public_user(fresh, owner=True)
 
 
 @api_router.get("/username-check/{username}")
@@ -344,6 +368,245 @@ async def lastfm_recent(username: str, limit: int = 10):
     return result
 
 
+# ---------- Lanyard live presence ----------
+
+_lanyard_cache = {}
+
+@api_router.get("/lanyard/{discord_id}")
+async def lanyard_lookup(discord_id: str):
+    if not re.fullmatch(r"\d{15,22}", discord_id):
+        raise HTTPException(400, "Invalid Discord ID")
+    hit = _lanyard_cache.get(discord_id)
+    if hit and time.time() - hit["at"] < 15:
+        return hit["data"]
+    try:
+        resp = await http.get(f"https://api.lanyard.rest/v1/users/{discord_id}")
+        payload = resp.json()
+    except Exception:
+        return {"monitored": False}
+    if not payload.get("success"):
+        return {"monitored": False}
+    d = payload.get("data") or {}
+    status = d.get("discord_status", "offline")
+    activity_text = None
+    if d.get("listening_to_spotify") and d.get("spotify"):
+        sp = d["spotify"]
+        activity_text = f"Listening to {sp.get('song')} — {sp.get('artist')}"
+    else:
+        acts = [a for a in (d.get("activities") or []) if a.get("type") != 4]
+        if acts:
+            a = acts[0]
+            verbs = {0: "Playing", 1: "Streaming", 2: "Listening to", 3: "Watching", 5: "Competing in"}
+            activity_text = f"{verbs.get(a.get('type'), 'Using')} {a.get('name')}"
+    data = {"monitored": True, "status": status, "activity": activity_text}
+    _lanyard_cache[discord_id] = {"at": time.time(), "data": data}
+    return data
+
+
+# ---------- Link click tracking ----------
+
+class ClickBody(BaseModel):
+    url: str
+
+@api_router.post("/profile/{username}/click")
+async def track_click(username: str, body: ClickBody):
+    res = await db.users.update_one(
+        {"username": username.strip().lower(), "links.url": body.url},
+        {"$inc": {"links.$.clicks": 1}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(404, "Link not found")
+    return {"ok": True}
+
+
+# ---------- Avatar upload & file serving ----------
+
+STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
+STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+_storage_key = None
+
+def init_storage(force: bool = False):
+    global _storage_key
+    if _storage_key and not force:
+        return _storage_key
+    resp = http_requests.post(
+        f"{STORAGE_URL}/init",
+        json={"emergent_key": os.environ.get("EMERGENT_LLM_KEY")},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    _storage_key = resp.json()["storage_key"]
+    return _storage_key
+
+ALLOWED_IMAGE = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+@api_router.post("/auth/avatar")
+async def upload_avatar(file: UploadFile = File(...), user: dict = Depends(current_user)):
+    if file.content_type not in ALLOWED_IMAGE:
+        raise HTTPException(400, "Only JPG, PNG, WebP or GIF images")
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(400, "Image must be under 5MB")
+    ext = (file.filename or "img.png").split(".")[-1].lower()
+    if ext not in ("jpg", "jpeg", "png", "webp", "gif"):
+        ext = "png"
+    path = f"sanctuary/avatars/{user['_id']}/{uuid.uuid4()}.{ext}"
+    try:
+        key = init_storage()
+        resp = http_requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": file.content_type},
+            data=data,
+            timeout=120,
+        )
+        resp.raise_for_status()
+        stored_path = resp.json()["path"]
+    except Exception:
+        raise HTTPException(502, "Upload failed — try again")
+    if user.get("avatar_path"):
+        await db.files.update_one({"storage_path": user["avatar_path"]}, {"$set": {"is_deleted": True}})
+    await db.files.insert_one({
+        "id": str(uuid.uuid4()),
+        "storage_path": stored_path,
+        "original_filename": file.filename,
+        "content_type": file.content_type,
+        "user_id": str(user["_id"]),
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"avatar_path": stored_path}})
+    fresh = await db.users.find_one({"_id": user["_id"]})
+    return public_user(fresh, owner=True)
+
+@api_router.delete("/auth/avatar")
+async def delete_avatar(user: dict = Depends(current_user)):
+    if user.get("avatar_path"):
+        await db.files.update_one({"storage_path": user["avatar_path"]}, {"$set": {"is_deleted": True}})
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"avatar_path": None}})
+    fresh = await db.users.find_one({"_id": user["_id"]})
+    return public_user(fresh, owner=True)
+
+@api_router.get("/files/{path:path}")
+async def serve_file(path: str):
+    record = await db.files.find_one({"storage_path": path, "is_deleted": False})
+    if not record:
+        raise HTTPException(404, "File not found")
+    try:
+        key = init_storage()
+        resp = http_requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+        resp.raise_for_status()
+    except Exception:
+        raise HTTPException(404, "File not found")
+    return Response(content=resp.content, media_type=record.get("content_type", "application/octet-stream"))
+
+
+# ---------- Payments (Stripe) ----------
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or "sk_test_emergent"
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+class CheckoutBody(BaseModel):
+    lookup_key: str
+    origin_url: str
+
+@api_router.post("/payments/checkout")
+async def create_checkout(body: CheckoutBody, user: dict = Depends(current_user)):
+    if body.lookup_key != "theme_pack":
+        raise HTTPException(400, "Unknown product")
+    if user.get("theme_pack"):
+        raise HTTPException(409, "Theme pack already unlocked")
+    prices = stripe.Price.list(lookup_keys=[body.lookup_key], active=True, limit=1).data
+    if not prices:
+        raise HTTPException(500, "Price not found")
+    price = prices[0]
+    kwargs = dict(
+        line_items=[{"price": price.id, "quantity": 1}],
+        mode="payment",
+        success_url=f"{body.origin_url}/settings?billing=success&session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{body.origin_url}/settings?billing=cancel",
+        metadata={"user_id": str(user["_id"]), "lookup_key": body.lookup_key},
+    )
+    try:
+        session = stripe.checkout.Session.create(**kwargs, managed_payments={"enabled": True})
+    except stripe.error.InvalidRequestError as e:
+        msg = (e.user_message or "").lower()
+        if "managed payments" in msg or "ineligible" in msg:
+            session = stripe.checkout.Session.create(
+                **kwargs, automatic_tax={"enabled": True}, billing_address_collection="required"
+            )
+        else:
+            raise
+    await db.payment_transactions.insert_one({
+        "session_id": session.id,
+        "user_id": str(user["_id"]),
+        "lookup_key": body.lookup_key,
+        "amount": (price.unit_amount or 0) / 100.0,
+        "currency": price.currency,
+        "status": "initiated",
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"checkout_url": session.url, "session_id": session.id}
+
+async def grant_purchase(session_id: str):
+    tx = await db.payment_transactions.find_one({"session_id": session_id})
+    if tx and tx.get("lookup_key") == "theme_pack" and tx.get("user_id"):
+        await db.users.update_one({"_id": ObjectId(tx["user_id"])}, {"$set": {"theme_pack": True}})
+
+@api_router.get("/payments/status/{session_id}")
+async def payment_status(session_id: str):
+    record = await db.payment_transactions.find_one({"session_id": session_id})
+    if not record:
+        raise HTTPException(404, "Transaction not found")
+    if record.get("payment_status") != "paid":
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            if s.payment_status == "paid" or s.status == "complete":
+                res = await db.payment_transactions.update_one(
+                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+                    {"$set": {"status": "completed", "payment_status": "paid",
+                              "updated_at": datetime.now(timezone.utc).isoformat()}},
+                )
+                if res.modified_count:
+                    await grant_purchase(session_id)
+                record = await db.payment_transactions.find_one({"session_id": session_id})
+        except stripe.error.StripeError:
+            pass
+    return {"session_id": record["session_id"], "status": record["status"], "payment_status": record["payment_status"]}
+
+@api_router.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(400, "Invalid signature")
+    obj, t = event["data"]["object"], event["type"]
+    if t in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
+        res = await db.payment_transactions.update_one(
+            {"session_id": obj["id"], "payment_status": {"$ne": "paid"}},
+            {"$set": {"status": "completed", "payment_status": "paid",
+                      "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+        if res.modified_count:
+            await grant_purchase(obj["id"])
+    elif t == "checkout.session.async_payment_failed":
+        await db.payment_transactions.update_one(
+            {"session_id": obj["id"]},
+            {"$set": {"status": "failed", "payment_status": "failed",
+                      "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    elif t == "checkout.session.expired":
+        await db.payment_transactions.update_one(
+            {"session_id": obj["id"]},
+            {"$set": {"status": "expired", "payment_status": "expired",
+                      "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    return {"status": "ok"}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -359,6 +622,11 @@ app.add_middleware(
 async def startup():
     await db.users.create_index("username", unique=True)
     await db.users.create_index("email", unique=True)
+    try:
+        init_storage()
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Storage init failed: {e}")
 
 
 @app.on_event("shutdown")

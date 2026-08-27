@@ -112,3 +112,78 @@ html.lenis, html.lenis body {
 .lenis.lenis-smooth {
     scroll-behavior: auto !important;
 }
+
+.tint-discord {
+    background-color: hsl(var(--tint-discord));
+}
+.tint-lastfm {
+    background-color: hsl(var(--tint-lastfm));
+}
+.tint-sage {
+    background-color: hsl(var(--tint-sage));
+}
+
+[data-theme="light"] {
+    --background: 40 22% 96%;
+    --foreground: 30 6% 10%;
+    --card: 0 0% 100%;
+    --secondary: 38 16% 93%;
+    --muted-foreground: 36 5% 37%;
+    --border: 38 16% 87%;
+    --input: 38 16% 87%;
+    --tint-discord: 231 100% 97%;
+    --tint-lastfm: 0 69% 97%;
+    --tint-sage: 136 27% 94%;
+}
+
+[data-theme="dark"] {
+    --background: 60 3% 7%;
+    --foreground: 40 20% 95%;
+    --card: 40 3% 10%;
+    --secondary: 40 3% 13%;
+    --muted-foreground: 36 6% 63%;
+    --border: 45 3% 17%;
+    --input: 45 3% 17%;
+    --tint-discord: 231 30% 16%;
+    --tint-lastfm: 0 32% 15%;
+    --tint-sage: 146 20% 14%;
+}
+
+[data-theme="moss"] {
+    --background: 140 18% 7%;
+    --foreground: 130 25% 93%;
+    --card: 140 15% 10%;
+    --secondary: 140 12% 14%;
+    --muted-foreground: 135 12% 62%;
+    --border: 140 14% 17%;
+    --input: 140 14% 17%;
+    --tint-discord: 231 25% 18%;
+    --tint-lastfm: 0 25% 16%;
+    --tint-sage: 146 22% 17%;
+}
+
+[data-theme="ember"] {
+    --background: 18 28% 7%;
+    --foreground: 25 45% 93%;
+    --card: 18 25% 10%;
+    --secondary: 18 20% 14%;
+    --muted-foreground: 20 18% 62%;
+    --border: 18 22% 18%;
+    --input: 18 22% 18%;
+    --tint-discord: 231 22% 19%;
+    --tint-lastfm: 8 35% 17%;
+    --tint-sage: 146 16% 16%;
+}
+
+[data-theme="dusk"] {
+    --background: 260 20% 9%;
+    --foreground: 270 30% 94%;
+    --card: 260 18% 12%;
+    --secondary: 260 14% 16%;
+    --muted-foreground: 265 14% 64%;
+    --border: 262 16% 20%;
+    --input: 262 16% 20%;
+    --tint-discord: 235 28% 20%;
+    --tint-lastfm: 340 25% 17%;
+    --tint-sage: 146 14% 16%;
+}

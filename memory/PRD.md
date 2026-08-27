@@ -103,6 +103,10 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 22)
 - Favorite song autoplay: favorite_track field (dashboard Connections); profile loads a floating mini-player (bottom-right) with cover art, pause/play and volume slider for visitors; attempts autoplay on load, falls back to a pulsing "tap to play" state when the browser blocks sound-autoplay. Audio via shared /api/track/preview (Deezer MP3)
 
+## Implemented (2026-08-27, iteration 23)
+- Custom audio upload for favorite song: POST/DELETE /api/auth/song (audio/*, ≤20MB, object storage at sanctuary/songs/); profile player uses the uploaded full song when present, else the Deezer 30s preview; dashboard has upload/remove with "custom audio active" badge
+- Dashboard cooldown UI now skips the lock for Owner (server bypass was UID-based since iter 19)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

@@ -134,6 +134,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "twitch_channel": u.get("twitch_channel"),
         "pinned_track": u.get("pinned_track"),
         "favorite_track": u.get("favorite_track"),
+        "song_url": f"/api/files/{u['song_path']}" if u.get("song_path") else None,
     }
     if owner:
         data["email"] = u.get("email")
@@ -984,6 +985,55 @@ async def delete_avatar(user: dict = Depends(current_user)):
     if user.get("avatar_path"):
         await db.files.update_one({"storage_path": user["avatar_path"]}, {"$set": {"is_deleted": True}})
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"avatar_path": None}})
+    fresh = await db.users.find_one({"_id": user["_id"]})
+    return public_user(fresh, owner=True)
+
+
+@api_router.post("/auth/song")
+async def upload_song(file: UploadFile = File(...), user: dict = Depends(current_user)):
+    ct = file.content_type or ""
+    if not ct.startswith("audio/"):
+        raise HTTPException(400, "Only audio files (mp3, wav, ogg, m4a)")
+    data = await file.read()
+    if len(data) > 20 * 1024 * 1024:
+        raise HTTPException(400, "Audio must be under 20MB")
+    ext = (file.filename or "song.mp3").split(".")[-1].lower()
+    if not re.fullmatch(r"[a-z0-9]{2,5}", ext):
+        ext = "mp3"
+    path = f"sanctuary/songs/{user['_id']}/{uuid.uuid4()}.{ext}"
+    try:
+        key = init_storage()
+        resp = http_requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": ct},
+            data=data,
+            timeout=180,
+        )
+        resp.raise_for_status()
+        stored_path = resp.json()["path"]
+    except Exception:
+        raise HTTPException(502, "Upload failed — try again")
+    if user.get("song_path"):
+        await db.files.update_one({"storage_path": user["song_path"]}, {"$set": {"is_deleted": True}})
+    await db.files.insert_one({
+        "id": str(uuid.uuid4()),
+        "storage_path": stored_path,
+        "original_filename": file.filename,
+        "content_type": ct,
+        "user_id": str(user["_id"]),
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"song_path": stored_path}})
+    fresh = await db.users.find_one({"_id": user["_id"]})
+    return public_user(fresh, owner=True)
+
+
+@api_router.delete("/auth/song")
+async def delete_song(user: dict = Depends(current_user)):
+    if user.get("song_path"):
+        await db.files.update_one({"storage_path": user["song_path"]}, {"$set": {"is_deleted": True}})
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"song_path": None}})
     fresh = await db.users.find_one({"_id": user["_id"]})
     return public_user(fresh, owner=True)
 

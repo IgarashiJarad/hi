@@ -4,7 +4,7 @@ import { Play, Pause, Volume2 } from "lucide-react";
 import { api } from "../lib/api";
 import { ease } from "./motion";
 
-export function AutoPlayMusic({ query }) {
+export function AutoPlayMusic({ query, songUrl }) {
   const [track, setTrack] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -12,9 +12,13 @@ export function AutoPlayMusic({ query }) {
   const audioRef = useRef(null);
 
   useEffect(() => {
+    if (songUrl) {
+      setTrack({ preview_url: songUrl, name: query || "favorite song", artist: "uploaded by the page owner", image_url: null });
+      return;
+    }
     if (!query) return;
     api.get("/track/preview", { params: { q: query } }).then((r) => setTrack(r.data)).catch(() => {});
-  }, [query]);
+  }, [query, songUrl]);
 
   useEffect(() => {
     const a = audioRef.current;

@@ -133,7 +133,8 @@ export default function Dashboard() {
   const pageUrl = `${window.location.origin}/${user.username}`;
   const lastChange = user.username_changed_at ? new Date(user.username_changed_at) : null;
   const nextChange = lastChange ? new Date(lastChange.getTime() + 30 * 24 * 3600 * 1000) : null;
-  const coolingDown = !!(nextChange && nextChange > new Date());
+  const isOwner = (user.roles || []).some((r) => r.id === "owner");
+  const coolingDown = !!(nextChange && nextChange > new Date() && !isOwner);
 
   useEffect(() => {
     const sessionId = params.get("session_id");
@@ -257,6 +258,34 @@ export default function Dashboard() {
       toast.success("Photo removed");
     } catch {
       toast.error("Could not remove photo");
+    }
+  };
+
+  const songInput = useRef(null);
+
+  const uploadSong = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const r = await api.post("/auth/song", form);
+      setUser(r.data);
+      toast.success("Custom audio uploaded — the full song plays on your page");
+    } catch (err) {
+      toast.error(errMsg(err, "Upload failed"));
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const removeSong = async () => {
+    try {
+      const r = await api.delete("/auth/song");
+      setUser(r.data);
+      toast.success("Custom audio removed — back to the preview");
+    } catch {
+      toast.error("Could not remove audio");
     }
   };
 
@@ -718,6 +747,23 @@ export default function Dashboard() {
                     className={field}
                   />
                   <p className="mt-2 text-[11px] text-white/30">Visitors can pause it or turn the volume down — a little player floats in the corner of your page.</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button data-testid="song-upload-btn" onClick={() => songInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-xs transition-colors hover:bg-white/10">
+                      <Plus size={13} /> upload audio file
+                    </button>
+                    {user.song_url && (
+                      <>
+                        <span data-testid="song-uploaded-badge" className="inline-flex items-center gap-1.5 rounded-full bg-[#8B5CF6]/15 px-3 py-1.5 text-[11px] text-[#A78BFA]">
+                          <Check size={11} /> custom audio active
+                        </span>
+                        <button data-testid="song-remove-btn" onClick={removeSong} className="rounded-full border border-white/15 px-3 py-1.5 text-[11px] text-white/50 transition-colors hover:text-red-400">
+                          remove
+                        </button>
+                      </>
+                    )}
+                    <input ref={songInput} data-testid="song-file-input" type="file" accept="audio/*" className="hidden" onChange={uploadSong} />
+                  </div>
+                  <p className="mt-2 text-[11px] text-white/30">No file uploaded? The 30-second preview method above is used instead.</p>
                   {(lastfmPreview.loading || lastfmPreview.data || lastfmPreview.error) && (
                     <div className="mt-4">
                       <LastfmCard data={lastfmPreview.data} loading={lastfmPreview.loading} error={lastfmPreview.error} onRetry={testLastfm} />

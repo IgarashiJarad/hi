@@ -206,7 +206,12 @@ export default function Profile() {
           );
         })()}
 
-        {profile.favorite_track && <AutoPlayMusic query={profile.favorite_track} />}
+        {(profile.favorite_track || profile.song_url) && (
+          <AutoPlayMusic
+            query={profile.favorite_track}
+            songUrl={profile.song_url ? `${process.env.REACT_APP_BACKEND_URL}${profile.song_url}` : null}
+          />
+        )}
 
         <footer className="mt-14 text-center">          <Link data-testid="made-with-badge" to="/" className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground">
             made with <span className="font-serif italic">dontblink</span>

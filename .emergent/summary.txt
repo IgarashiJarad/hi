@@ -1,0 +1,143 @@
+<analysis>**original_problem_statement**: Build a landing page: can you build me a social media page, make me a setting to link my discord, when i link my discord display my profile photo + banner (if user has a banner) and name. + make a option for people to add their social media (make it auto detect the social media websites favicon) + add a last.fm option to track my music plays. Make this genuinely award-worthy — Awwwards Site-of-the-Day level, not a generic template. Go bold and cohesive: commit to the single most distinctive art direction the brand allows and push it to the edge.
+
+**PRODUCT REQUIREMENTS**: 
+- Discord profile fetching (Avatar, name, banner).
+- Last.fm recent tracks integration.
+- Custom user profiles ().
+- High-end dark/organic aesthetic, heavy use of smooth motion (Framer Motion, Lenis scroll).
+
+**User's preferred language**: English (INSTRUCT next agent to respond in English only)
+
+**what currently exists?**: A fully functional, feature-rich link-in-bio platform named dontblink ( concept). It features a dark plum guns.lol aesthetic dashboard, Stripe-integrated premium themes, page view/referrer tracking, Leaderboard, permanent UIDs, Roles (V1, Owner, Developer), Lanyard (Discord presence), Twitch/YouTube embeds, weekly digest emails via Resend, and an autoplaying floating music player that supports custom audio file uploads. 
+
+**Last working item**:
+- Last item agent was working: Allowing users to upload custom audio files for their profile's favorite song player, falling back to Last.fm/Spotify preview if no file is uploaded. Also ensuring the @Owner role (UID #2) bypasses the 30-day username change cooldown in the UI.
+- Status: USER VERIFICATION PENDING
+- Agent Testing Done: Y
+- Which testing method agent to use?: Frontend testing agent / Screenshot tool
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+NONE
+
+**In progress Task List**:
+NONE
+
+**Upcoming and Future Tasks**:
+- P1: **Song Progress Bar** - Show a thin progress line on the floating player so visitors see how far into the song they are ().
+- P1: **View Milestones** - Celebrate on your dashboard when your page crosses 50, 100, 500 views ().
+- P2: **Digest Opt-Out** - Add a toggle in your dashboard to pause the Sunday email without touching anything else.
+- P2: **Cloudflare Turnstile** - Add a real CAPTCHA checkbox to signup for a second, stronger anti-bot layer.
+
+**Completed work in this session**:
+- Initial React/FastAPI/MongoDB setup with JWT Auth (DONE)
+- Discord profile fetching via japi.rest & Last.fm API proxy (DONE)
+- Stripe integration for paid theme pack (DONE)
+- Lanyard presence for live Spotify/Discord status (DONE)
+- Page stats (total views, top referrers, daily sparkline) (DONE)
+- Rebranding to dontblink with winking favicon (DONE)
+- Dark plum UI overhaul for Landing, Dashboard, and Info pages (DONE)
+- Compare, Leaderboard, and Pricing standalone pages (DONE)
+- Sequential permanent UID system and Role pill badges (Owner, Developer, V1) (DONE)
+- Username changing with 30-day cooldown (Owner bypasses) (DONE)
+- Weekly digest emails via Resend (DONE)
+- Twitch (Live/VOD/Clip fallback) and YouTube (Latest RSS video) embeds (DONE)
+- Pinned favorite track with autoplaying floating music player and custom / uploads (DONE)
+
+**Earlier issues found/mentioned but not fixed**:
+- Issue 1: YouTube Official Music Video fetching
+  - Debug checklist: Check  media routing or YouTube proxy functionality. 
+  - Why to solve this issue and what will be achieved with this?: The user briefly requested fetching the Official Music Video for the favorite song via YouTube. The user paused execution and changed the requirement to custom audio file uploads in the very next message, bypassing the YouTube video logic. It may still be requested later.
+  - Should Test frontend/backend/both after fix: Both
+  - Is recurring issue? N
+
+**Known issue recurrence from previous fork**:
+- Issue recurrence in previous fork: N/A (First session)
+- Recurrence count: 0
+- Status: NOT STARTED
+
+**Code Architecture**:
+
+
+**Key Technical Concepts**:
+Frontend: React, Tailwind CSS, Framer Motion, Shadcn UI, React Router.
+Backend: FastAPI, Motor (Async MongoDB), PyJWT, Stripe SDK.
+Architecture: SPA communicating with a proxy API layer that obscures 3rd-party keys (Last.fm, Stripe, Resend) and handles file uploads locally/GridFS.
+
+**key DB schema**:
+- : 
+- :  (Used for generating permanent UIDs)
+
+**changes in tech stack**:
+None.
+
+**All files of reference**:
+- : Contains all endpoints, auth logic, bot honeypot, and 3rd-party proxy wrappers.
+- : The central user settings UI.
+- : Public-facing dynamic profile page.
+- : The floating audio player.
+- : Contains active test accounts (especially  which is UID #2 / Owner).
+
+**Areas that need refactoring**:
+-  is handling too many responsibilities (Auth, Stripe, API Proxies, File Uploads, Webhooks). It is over 1000 lines and should ideally be split into routers if the project expands further.
+
+**key api endpoints**:
+-  (includes honeypot logic)
+- 
+-  & 
+- 
+- 
+
+**Critical Info for New Agent**:
+- **Owner Role**: Tied strictly to  (User: ). The owner bypasses all premium Stripe gates and username cooldowns.
+- **Bot Protection**: Registration includes a hidden  honeypot field and a strict rate limiter to prevent bot spam.
+- **File Uploads**: Avatars and custom songs are uploaded and served directly through the FastAPI backend ().
+- **Testing**: Whenever checking the live site, DO NOT use localhost strings; strictly utilize  mechanics.
+
+**documents and test reports created in this job**:
+- 
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages**:
+1. (User): Profile Song Pin: Pin a favorite track... Profile Updates: Make the twitch block and youtube block side by side... -> COMPLETED
+2. (User): if the twitch stream has nothing recent or isnt live, fetch their clips or highlights... -> COMPLETED
+3. (User): add a users favourite song feature where they can display their favourite song and it plays automatically... visitor can turn down volume or pause -> COMPLETED
+4. (User): when using the song feature, fetch from youtube instead of last.fm to play the full song and / or if the music has a music video then play that too... -> ABORTED/PAUSED BY USER
+5. (User): [Execution paused by user] -> COMPLETED
+6. (User): for the song feature, make it so users can upload audio files, if theres no audio files detected then stick with the default method. and let @owner be able to change username bypassing the cooldown -> COMPLETED (USER VERIFICATION PENDING)
+
+**Project Health Check**:
+- Broken: None
+- Mocked: Stripe checkout runs in test sandbox mode.
+
+**3rd Party Integrations**:
+- Stripe (Payments) — requires User API Key (Test key currently hardcoded via env).
+- Resend (Emails) — requires Emergent Integration Playbook.
+- Lanyard API (Discord Presence) — Public proxy, no key.
+- Last.fm API — requires User API Key.
+- Japi.rest (Discord Avatar Proxy) — Public proxy, no key.
+- Twitch (Decapi/GQL) — Public proxy, no key.
+- YouTube (RSS XML) — Public, no key.
+
+**Testing status**:
+- Testing agent used after significant changes: NO (Screenshot tool / Bash testing utilized instead).
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Test files created: NONE.
+- Known regressions: NONE.
+
+**Credentials to test flow**:
+Check . Active owner account is username  (UID #2).
+
+**What agent forgot to execute**:
+The user momentarily requested fetching Official Music Video from YouTube for the favorite song feature. The user then immediately paused execution and changed the prompt to allow users to upload audio files instead. The agent implemented the file uploads. The YT music video feature was safely ignored due to the updated instructions, but should be noted in case the user asks for it again.
+
+**Debugging checklist for current issue**
+    Issue: None currently active, but if testing Custom Audio Uploads fails:
+
+    Frontend files to check: 
+     (Check Audio src and  prop).
+     (Check  function).
+  
+    Backend files to check:
+     (Check  and static file serving).</analysis>

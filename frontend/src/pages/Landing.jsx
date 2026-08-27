@@ -22,7 +22,7 @@ function Nav() {
   return (
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
       <nav data-testid="main-nav" className="flex w-full max-w-2xl items-center justify-between rounded-full border border-border/80 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-xl">
-        <Link to="/" data-testid="nav-brand" className="font-serif text-xl font-semibold italic">sanctuary</Link>
+        <Link to="/" data-testid="nav-brand" className="font-serif text-xl font-semibold italic">dontblink</Link>
         <div className="flex items-center gap-2">
           {user ? (
             <>
@@ -62,7 +62,7 @@ function DemoProfileCard() {
           <img src={DEMO_AVATAR} alt="demo avatar" className="h-12 w-12 rounded-full object-cover" />
           <div>
             <p className="font-display font-bold leading-tight">wren</p>
-            <p className="text-xs text-muted-foreground">sanctuary.page/wren</p>
+            <p className="text-xs text-muted-foreground">dontblink.page/wren</p>
           </div>
           <span className="ml-auto rounded-full bg-secondary px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             live demo
@@ -159,7 +159,7 @@ const FEATURES = [
     icon: Fingerprint,
     span: "md:col-span-6",
     title: "One quiet link",
-    body: "You get sanctuary.page/you. Nothing loud, nothing cluttered. Just you, softly.",
+    body: "You get dontblink.page/you. Nothing loud, nothing cluttered. Just you, softly.",
     testid: "feature-link",
   },
 ];
@@ -291,7 +291,7 @@ export default function Landing() {
           </FadeUp>
           <FadeUp delay={0.68}>
             <div className="mt-8 flex max-w-md items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-              <span className="pl-3 font-mono text-sm text-muted-foreground">sanctuary.page/</span>
+              <span className="pl-3 font-mono text-sm text-muted-foreground">dontblink.page/</span>
               <input
                 data-testid="claim-username-input"
                 value={claim}
@@ -342,7 +342,7 @@ export default function Landing() {
       <footer className="border-t border-border bg-white/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-16 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-serif text-6xl italic text-ink/80 sm:text-7xl">sanctuary</p>
+            <p className="font-serif text-6xl italic text-ink/80 sm:text-7xl">dontblink</p>
             <p className="mt-3 max-w-xs text-sm text-muted-foreground">Your data stays yours. No trackers, no noise — just a page that feels like home.</p>
           </div>
           <div className="flex gap-6 text-sm">

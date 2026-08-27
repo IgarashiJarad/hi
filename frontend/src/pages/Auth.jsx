@@ -63,7 +63,7 @@ export default function AuthPage({ mode }) {
         transition={{ duration: 0.7, ease }}
         className="w-full max-w-md"
       >
-        <Link to="/" className="mb-10 block text-center font-serif text-2xl font-semibold italic">sanctuary</Link>
+        <Link to="/" className="mb-10 block text-center font-serif text-2xl font-semibold italic">dontblink</Link>
         <div className="rounded-3xl border border-border bg-card p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
           <h1 className="font-display text-2xl font-bold">
             {isRegister ? "Claim your corner" : "Welcome back"}
@@ -77,7 +77,7 @@ export default function AuthPage({ mode }) {
               <>
                 <div>
                   <div className="flex items-center gap-2 rounded-xl border border-input bg-paper px-4 py-3 focus-within:border-sage">
-                    <span className="font-mono text-sm text-muted-foreground">sanctuary.page/</span>
+                    <span className="font-mono text-sm text-muted-foreground">dontblink.page/</span>
                     <input
                       data-testid="register-username-input"
                       value={username}

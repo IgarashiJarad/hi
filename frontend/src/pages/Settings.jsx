@@ -206,7 +206,7 @@ export default function Settings() {
     <div data-testid="settings-page" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Link to="/" className="font-serif text-xl font-semibold italic">sanctuary</Link>
+          <Link to="/" className="font-serif text-xl font-semibold italic">dontblink</Link>
           <h1 className="mt-2 font-display text-3xl font-bold">Settings</h1>
           {location.state?.welcome && (
             <p className="mt-1 text-sm text-sage">Welcome in — make it yours below.</p>

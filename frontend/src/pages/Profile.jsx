@@ -50,7 +50,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (!profile) return;
-    document.title = `${profile.display_name || profile.username} — sanctuary`;
+    document.title = `${profile.display_name || profile.username} — dontblink`;
     if (profile.discord_id) {
       loadDiscord(profile.discord_id);
       const loadPresence = () =>
@@ -141,7 +141,7 @@ export default function Profile() {
 
         <footer className="mt-14 text-center">
           <Link data-testid="made-with-badge" to="/" className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground">
-            made with <span className="font-serif italic">sanctuary</span>
+            made with <span className="font-serif italic">dontblink</span>
           </Link>
         </footer>
       </motion.main>

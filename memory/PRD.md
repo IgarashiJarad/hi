@@ -1,4 +1,6 @@
-# PRD — sanctuary (personal link-in-bio pages)
+# PRD — dontblink (personal link-in-bio pages)
+
+## Renamed 2026-08-27 (iteration 4): brand is now "dontblink" (was "sanctuary") — UI, tab title, claim prefixes, footer, profile badge, and Stripe product name all updated. Internal storage path and localStorage key unchanged (invisible).
 
 ## Original problem statement
 "Build a landing page: can you build me a social media page, make me a setting to link my discord, when i link my discord display my profile photo + banner (if user has a banner) and name. + make a option for people to add their social media (make it auto detect the social media websites favicon) + add a last.fm option to track my music plays"

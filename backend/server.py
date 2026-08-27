@@ -8,7 +8,12 @@ import os
 import re
 import time
 import uuid
+import asyncio
+import ipaddress
 import logging
+from html import escape
+from html.parser import HTMLParser
+from urllib.parse import urlparse
 from typing import Optional, List, Annotated
 from datetime import datetime, timezone, timedelta
 
@@ -466,6 +471,174 @@ async def lastfm_recent(username: str, limit: int = 10):
     return result
 
 
+# ---------- Email (Emergent managed Resend) ----------
+
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
+EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "dontblink")
+APP_URL = os.environ.get("APP_URL", "")
+
+_SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
+_CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
+             "send us your password", "enter your password below", "confirm your card number",
+             "your full card number", "seed phrase", "recovery phrase", "verify your card",
+             "social security number", "confirm your bank details")
+_HOSTISH = re.compile(r"\b(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})", re.I)
+
+
+def _host_ok(host: str) -> bool:
+    if not host or "xn--" in host:
+        return False
+    try:
+        ipaddress.ip_address(host)
+        return False
+    except ValueError:
+        pass
+    return not any(host == s or host.endswith("." + s) for s in _SHORTENERS)
+
+
+def _same_site(shown: str, real: str) -> bool:
+    return shown == real or real.endswith("." + shown) or shown.endswith("." + real)
+
+
+class _EmailScan(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.tags, self.urls, self.anchors = set(), [], []
+        self._href, self._text = None, []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.add(tag.lower())
+        self.urls += [v for k, v in attrs if k.lower() in ("href", "src") and v]
+        if tag.lower() == "a":
+            self._href = dict((k.lower(), v) for k, v in attrs).get("href")
+            self._text = []
+
+    def handle_data(self, data):
+        if self._href is not None:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "a" and self._href is not None:
+            self.anchors.append((self._href, "".join(self._text)))
+            self._href, self._text = None, []
+
+
+def _assert_safe_email(subject: str, html: str) -> None:
+    scan = _EmailScan()
+    scan.feed(html)
+    if scan.tags & {"form", "input", "textarea", "select"}:
+        raise ValueError("No forms or input fields in email (G2)")
+    body = f"{subject}\n{html}".lower()
+    for p in _CRED_ASK:
+        if p in body:
+            raise ValueError(f"Email asks the recipient for credentials: {p!r} (G2)")
+    for url in scan.urls:
+        low = url.strip().lower()
+        if low.startswith(("mailto:", "tel:", "cid:", "#")):
+            continue
+        if not low.startswith("https://"):
+            raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
+        host = urlparse(low).hostname or ""
+        if not _host_ok(host) or urlparse(low).username is not None:
+            raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+    for href, text in scan.anchors:
+        real = urlparse(href.strip().lower()).hostname or ""
+        if not real:
+            continue
+        for m in _HOSTISH.finditer(text):
+            if not _same_site(m.group(1).lower(), real):
+                raise ValueError(f"Anchor text {m.group(1)!r} != real link host {real!r} (G3)")
+
+
+async def send_email(*, to: str, subject: str, html: str) -> str | None:
+    _assert_safe_email(subject, html)
+    payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
+    try:
+        resp = await http.post(
+            f"{EMAIL_BASE_URL}/api/v1/email/send",
+            headers={"X-Email-Key": EMAIL_KEY},
+            json=payload,
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json().get("id")
+    except Exception as e:
+        logger.error(f"Email send failed: {e}")
+        raise HTTPException(502, "Failed to send email")
+
+
+def digest_html(username: str, visits: int, top_ref: str | None, top_link: str | None) -> str:
+    def stat(label, value):
+        return (
+            f'<td style="padding:12px 16px;background:#1c1130;border-radius:12px">'
+            f'<p style="margin:0;font-size:10px;color:#A78BFA;text-transform:uppercase;letter-spacing:1px">{label}</p>'
+            f'<p style="margin:4px 0 0;font-size:18px;font-weight:bold;color:#ffffff">{value}</p></td>'
+        )
+
+    return (
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+        '<td style="background:#0d0714;padding:32px;font-family:Arial,sans-serif">'
+        '<p style="margin:0 0 8px;color:#A78BFA;font-size:11px;letter-spacing:2px;text-transform:uppercase">dontblink weekly</p>'
+        f'<h1 style="margin:0 0 20px;color:#ffffff;font-size:22px">your week, @{escape(username)}</h1>'
+        '<table role="presentation" cellpadding="0" cellspacing="6"><tr>'
+        + stat("visits", visits)
+        + stat("top referrer", escape(top_ref) if top_ref else "&mdash;")
+        + stat("most tapped", escape(top_link) if top_link else "&mdash;")
+        + "</tr></table>"
+        f'<p style="margin:24px 0 0"><a href="{APP_URL}/settings" style="color:#A78BFA">open your dashboard</a></p>'
+        '<p style="margin:24px 0 0;font-size:11px;color:#666666">sent by dontblink every Sunday &mdash; we never ask for your password by email</p>'
+        "</td></tr></table>"
+    )
+
+
+async def send_weekly_digests(force_user_id=None) -> int:
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    query = {}
+    if force_user_id:
+        query["_id"] = force_user_id
+    sent = 0
+    async for u in db.users.find(query):
+        if not force_user_id and u.get("last_digest_week") == week:
+            continue
+        by_day = u.get("views_by_day", {})
+        today = datetime.now(timezone.utc).date()
+        visits = sum(by_day.get((today - timedelta(days=i)).isoformat(), 0) for i in range(7))
+        refs = u.get("referrers", [])
+        top_ref = max(refs, key=lambda r: r.get("count", 0))["host"] if refs else None
+        links = [l for l in u.get("links", []) if l.get("clicks")]
+        top_link = None
+        if links:
+            best = max(links, key=lambda l: l.get("clicks", 0))
+            top_link = best.get("label") or best.get("url")
+        await send_email(
+            to=u["email"],
+            subject=f"your week on dontblink — {visits} visits",
+            html=digest_html(u["username"], visits, top_ref, top_link),
+        )
+        await db.users.update_one({"_id": u["_id"]}, {"$set": {"last_digest_week": week}})
+        sent += 1
+    return sent
+
+
+@api_router.post("/auth/digest-test")
+async def digest_test(user: dict = Depends(current_user)):
+    await send_weekly_digests(force_user_id=user["_id"])
+    return {"ok": True, "sent_to": user["email"]}
+
+
+async def digest_loop():
+    while True:
+        await asyncio.sleep(3600)
+        try:
+            if datetime.now(timezone.utc).weekday() == 6:
+                n = await send_weekly_digests()
+                if n:
+                    logger.info(f"Sent {n} weekly digests")
+        except Exception as e:
+            logger.error(f"Digest loop error: {e}")
+
+
 # ---------- Lanyard live presence ----------
 
 _lanyard_cache = {}
@@ -490,7 +663,7 @@ async def lanyard_lookup(discord_id: str):
     spotify = None
     if d.get("listening_to_spotify") and d.get("spotify"):
         sp = d["spotify"]
-        spotify = {"song": sp.get("song"), "artist": sp.get("artist"), "album_art": sp.get("album_art_url")}
+        spotify = {"song": sp.get("song"), "artist": sp.get("artist"), "album_art": sp.get("album_art_url"), "track_id": sp.get("track_id")}
         activity_text = f"Listening to {sp.get('song')} — {sp.get('artist')}"
     else:
         acts = [a for a in (d.get("activities") or []) if a.get("type") != 4]
@@ -754,6 +927,7 @@ app.add_middleware(
 async def startup():
     await db.users.create_index("username", unique=True)
     await db.users.create_index("email", unique=True)
+    app.state.digest_task = asyncio.create_task(digest_loop())
     try:
         init_storage()
         logger.info("Object storage initialized")

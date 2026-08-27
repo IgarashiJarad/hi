@@ -75,6 +75,11 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Leaderboard crown: profile endpoint computes top viewer; #1 page gets gold "most viewed" crown pill (currently hi2w)
 - Username history: renames push to username_history; dashboard Customize shows quiet "previously: @…" log; hi2w's pre-tracking rename from test backfilled
 
+## Implemented (2026-08-27, iteration 16)
+- Spotify 30s preview: Lanyard proxy passes track_id; Discord card vinyl row gets a play/pause button revealing a compact Spotify embed player
+- Weekly digest email via Emergent-managed Resend (gate + from_name per playbook): Sunday 00:00 UTC hourly-check loop sends each user their week (visits, top referrer, most-tapped link), one per ISO week; dashboard "email me this week's digest now" button → POST /api/auth/digest-test
+- Visitor greeting: localStorage per-page visit memory; returning visitors see "welcome back — you've been here before" under the badges
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

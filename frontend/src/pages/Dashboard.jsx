@@ -431,6 +431,20 @@ export default function Dashboard() {
                     <span className="text-sm text-white/40">page visits</span>
                   </div>
                   <div className="mt-4"><Sparkline data={user.views_daily} /></div>
+                  <button
+                    data-testid="digest-test-btn"
+                    onClick={async () => {
+                      try {
+                        const r = await api.post("/auth/digest-test");
+                        toast.success(`Weekly digest sent to ${r.data.sent_to}`);
+                      } catch (e) {
+                        toast.error(errMsg(e, "Could not send digest"));
+                      }
+                    }}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60 transition-colors hover:border-[#8B5CF6]/40 hover:text-white"
+                  >
+                    email me this week's digest now
+                  </button>
                   {user.referrers?.length > 0 && (
                     <ul data-testid="stats-referrers" className="mt-5 grid gap-2 sm:grid-cols-2">
                       {user.referrers.map((r, i) => (

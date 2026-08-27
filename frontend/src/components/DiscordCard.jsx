@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Copy, Check, MessageSquare, RefreshCw } from "lucide-react";
+import { Copy, Check, MessageSquare, RefreshCw, Play, Pause } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ease } from "./motion";
 
 export function DiscordCard({ data, loading, error, onRetry, presence }) {
   const [copied, setCopied] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const copyId = () => {
     if (!data?.id) return;
@@ -126,11 +127,35 @@ export function DiscordCard({ data, loading, error, onRetry, presence }) {
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sage">listening to spotify</p>
               <p data-testid="spotify-track-line" className="truncate text-xs font-medium">{presence.spotify.song} — {presence.spotify.artist}</p>
             </div>
+            {presence.spotify.track_id && (
+              <button
+                data-testid="spotify-play-btn"
+                onClick={() => setShowPlayer(!showPlayer)}
+                title={showPlayer ? "hide preview" : "play 30s preview"}
+                className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8B5CF6]/20 text-[#A78BFA] transition-colors hover:bg-[#8B5CF6]/35"
+              >
+                {showPlayer ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
+              </button>
+            )}
           </div>
         ) : presence?.activity && (
           <p data-testid="discord-activity" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-[#43B581]" /> {presence.activity}
           </p>
+        )}
+        {showPlayer && presence?.spotify?.track_id && (
+          <motion.iframe
+            data-testid="spotify-embed"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 80 }}
+            transition={{ duration: 0.4, ease }}
+            src={`https://open.spotify.com/embed/track/${presence.spotify.track_id}?utm_source=generator&theme=0`}
+            className="mt-3 w-full overflow-hidden rounded-xl border-0"
+            height="80"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            title="Spotify preview"
+          />
         )}
       </div>
     </motion.div>

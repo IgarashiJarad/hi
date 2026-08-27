@@ -16,6 +16,7 @@ export default function Profile() {
 
   const [profile, setProfile] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [welcomeBack, setWelcomeBack] = useState(false);
   const [discord, setDiscord] = useState({ loading: false, data: null, error: null });
   const [lastfm, setLastfm] = useState({ loading: false, data: null, error: null });
   const [presence, setPresence] = useState(null);
@@ -39,6 +40,12 @@ export default function Profile() {
       setLastfm({ loading: false, data: null, error: errMsg(e, "Last.fm unavailable") });
     }
   }, []);
+
+  useEffect(() => {
+    const key = `db_visited_${username}`;
+    if (localStorage.getItem(key)) setWelcomeBack(true);
+    localStorage.setItem(key, Date.now().toString());
+  }, [username]);
 
   useEffect(() => {
     setProfile(null);
@@ -133,6 +140,17 @@ export default function Profile() {
             )}
             <RolePills roles={profile.roles || []} />
           </div>
+          {welcomeBack && (
+            <motion.p
+              data-testid="welcome-back-note"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease }}
+              className="mt-3 inline-block rounded-full bg-secondary px-3.5 py-1.5 text-xs text-muted-foreground"
+            >
+              welcome back — you've been here before
+            </motion.p>
+          )}
           {profile.bio && <p data-testid="profile-bio" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>}
           {isOwn && (
             <Link data-testid="edit-profile-btn" to="/settings" className="mt-4 inline-block rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">

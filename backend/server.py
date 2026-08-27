@@ -171,6 +171,7 @@ def verify_password(pw: str, hashed: str) -> bool:
 
 
 USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,20}$")
+RESERVED_USERNAMES = {"compare", "leaderboard", "pricing", "settings", "login", "register", "api", "dashboard"}
 
 
 class RegisterBody(BaseModel):
@@ -204,7 +205,7 @@ async def register(body: RegisterBody):
         raise HTTPException(400, "Invalid email")
     if len(body.password) < 6:
         raise HTTPException(400, "Password must be at least 6 characters")
-    if await db.users.find_one({"username": username}):
+    if username in RESERVED_USERNAMES or await db.users.find_one({"username": username}):
         raise HTTPException(409, "That username is taken")
     if await db.users.find_one({"email": email}):
         raise HTTPException(409, "That email is already registered")
@@ -277,9 +278,26 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
 @api_router.get("/username-check/{username}")
 async def username_check(username: str):
     username = username.strip().lower()
-    valid = bool(USERNAME_RE.match(username))
+    valid = bool(USERNAME_RE.match(username)) and username not in RESERVED_USERNAMES
     taken = bool(await db.users.find_one({"username": username})) if valid else False
     return {"valid": valid, "available": valid and not taken}
+
+
+class UsernameChange(BaseModel):
+    username: str
+
+
+@api_router.put("/auth/username")
+async def change_username(body: UsernameChange, user: dict = Depends(current_user)):
+    username = body.username.strip().lower()
+    if not USERNAME_RE.match(username):
+        raise HTTPException(400, "Username must be 3-20 chars: letters, numbers, underscore")
+    if username != user["username"]:
+        if username in RESERVED_USERNAMES or await db.users.find_one({"username": username}):
+            raise HTTPException(409, "username unavailable")
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"username": username}})
+    fresh = await db.users.find_one({"_id": user["_id"]})
+    return public_user(fresh, owner=True)
 
 
 @api_router.get("/profile/{username}")

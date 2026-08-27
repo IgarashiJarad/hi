@@ -59,6 +59,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Role system (Discord-style pills: colored dot + label + icon): V1 auto-assigned to all signups before 2027-01-01 (from created_at); Owner/Developer assigned via OWNER_USERNAMES / DEVELOPER_USERNAMES env lists. Roles on public profiles, leaderboard entries, and dashboard overview. Current: @test = Owner, @wren = Developer.
 - RolePills component (crown/code/zap icons; colors purple/blue/gold)
 
+## Implemented (2026-08-27, iteration 12)
+- Username change: PUT /api/auth/username (JWT survives — token keyed on user id); dashboard Customize tab has username field with live debounced availability check, "username unavailable" state, disabled change button until free. Reserved names (compare/leaderboard/pricing/settings/login/register/api/dashboard) blocked at register + rename.
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

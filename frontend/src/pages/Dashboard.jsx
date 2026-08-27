@@ -91,6 +91,40 @@ export default function Dashboard() {
   const avatarInput = useRef(null);
   const [discordPreview, setDiscordPreview] = useState({ loading: false, data: null, error: null });
   const [lastfmPreview, setLastfmPreview] = useState({ loading: false, data: null, error: null });
+  const [newUsername, setNewUsername] = useState(user.username);
+  const [unameStatus, setUnameStatus] = useState(null);
+
+  useEffect(() => {
+    const name = newUsername.trim().toLowerCase();
+    if (!name || name === user.username) {
+      setUnameStatus(null);
+      return;
+    }
+    if (!/^[a-z0-9_]{3,20}$/.test(name)) {
+      setUnameStatus("invalid");
+      return;
+    }
+    setUnameStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const r = await api.get(`/username-check/${name}`);
+        setUnameStatus(r.data.available ? "available" : "taken");
+      } catch {
+        setUnameStatus(null);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [newUsername, user.username]);
+
+  const saveUsername = async () => {
+    try {
+      const r = await api.put("/auth/username", { username: newUsername });
+      setUser(r.data);
+      toast.success("Username changed — your page moved with you");
+    } catch (e) {
+      toast.error(errMsg(e, "username unavailable"));
+    }
+  };
 
   const pageUrl = `${window.location.origin}/${user.username}`;
 
@@ -413,6 +447,34 @@ export default function Dashboard() {
               <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
                 <div className="space-y-6">
                   <h1 className="font-display text-2xl font-bold">Customize</h1>
+                  <section className="rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">
+                    <h2 className="mb-1 font-display text-lg font-bold">Username</h2>
+                    <p className="mb-4 text-xs text-white/40">This moves your whole page — dontblink.page/<span className="text-[#A78BFA]">you</span></p>
+                    <div className="flex gap-2">
+                      <div className={`${field} flex items-center gap-2`}>
+                        <span className="font-mono text-sm text-white/40">/</span>
+                        <input
+                          data-testid="change-username-input"
+                          value={newUsername}
+                          onChange={(e) => setNewUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                          maxLength={20}
+                          className="w-full bg-transparent font-mono text-sm outline-none"
+                        />
+                        {unameStatus === "checking" && <span className="shrink-0 text-xs text-white/40">checking…</span>}
+                        {unameStatus === "available" && <Check size={15} className="shrink-0 text-[#A78BFA]" />}
+                      </div>
+                      <button
+                        data-testid="change-username-btn"
+                        onClick={saveUsername}
+                        disabled={unameStatus !== "available"}
+                        className="shrink-0 rounded-xl bg-[#8B5CF6] px-5 text-sm font-medium text-white transition-colors hover:bg-[#7C4DEF] disabled:opacity-40"
+                      >
+                        change
+                      </button>
+                    </div>
+                    {unameStatus === "taken" && <p data-testid="username-unavailable-msg" className="mt-2 text-xs text-red-400">username unavailable</p>}
+                    {unameStatus === "invalid" && <p data-testid="username-invalid-msg" className="mt-2 text-xs text-red-400">3-20 chars: letters, numbers, underscore</p>}
+                  </section>
                   <section className="rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">
                     <h2 className="mb-5 font-display text-lg font-bold">Profile</h2>
                     <div className="mb-5 flex items-center gap-4">

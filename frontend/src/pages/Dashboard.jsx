@@ -477,6 +477,11 @@ export default function Dashboard() {
                       </button>
                     </div>
                     {unameStatus === "taken" && <p data-testid="username-unavailable-msg" className="mt-2 text-xs text-red-400">username unavailable</p>}
+                    {user.username_history?.length > 0 && (
+                      <p data-testid="username-history" className="mt-3 text-xs text-white/30">
+                        previously: {user.username_history.map((h) => `@${h.username}`).join(" → ")}
+                      </p>
+                    )}
                     {coolingDown && (
                       <p data-testid="username-cooldown-msg" className="mt-2 text-xs text-white/40">
                         usernames change once a month — next change opens {nextChange.toLocaleDateString(undefined, { month: "long", day: "numeric" })}

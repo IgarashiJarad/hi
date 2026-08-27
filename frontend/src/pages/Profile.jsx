@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Crown } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api, errMsg } from "../lib/api";
 import { ease } from "../components/motion";
@@ -119,11 +120,19 @@ export default function Profile() {
           </motion.div>
           <h1 data-testid="profile-display-name" className="font-display text-2xl font-bold">{name}</h1>
           <p data-testid="profile-username" className="mt-0.5 text-sm text-muted-foreground">@{profile.username}</p>
-          {profile.roles?.length > 0 && (
-            <div className="mt-3 flex justify-center">
-              <RolePills roles={profile.roles} />
-            </div>
-          )}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+            {profile.uid && (
+              <span data-testid="uid-badge" title="member number" className="inline-flex items-center rounded-full border border-border bg-secondary px-2.5 py-1 font-mono text-[11px] text-muted-foreground">
+                #{profile.uid}
+              </span>
+            )}
+            {profile.crowned && (
+              <span data-testid="crown-badge" title="most viewed page right now" className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium" style={{ borderColor: "#F5C51844", backgroundColor: "#F5C51814", color: "#F5C518" }}>
+                <Crown size={11} /> most viewed
+              </span>
+            )}
+            <RolePills roles={profile.roles || []} />
+          </div>
           {profile.bio && <p data-testid="profile-bio" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>}
           {isOwn && (
             <Link data-testid="edit-profile-btn" to="/settings" className="mt-4 inline-block rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">

@@ -70,6 +70,11 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Permanent UIDs: sequential atomic counter (counters collection), assigned at register; existing users backfilled by signup order (wren #1, hi2w #2); uid is public, never editable, survives username changes; dashboard username card shows "UID #N · unchangeable"
 - Owner role re-pointed: user renamed test → hi2w (using the rename feature); OWNER_USERNAMES updated to hi2w
 
+## Implemented (2026-08-27, iteration 15)
+- Public UID badge: "#N" pill on profile pages next to roles
+- Leaderboard crown: profile endpoint computes top viewer; #1 page gets gold "most viewed" crown pill (currently hi2w)
+- Username history: renames push to username_history; dashboard Customize shows quiet "previously: @…" log; hi2w's pre-tracking rename from test backfilled
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

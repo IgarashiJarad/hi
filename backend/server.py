@@ -125,6 +125,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         data["email"] = u.get("email")
         data["theme_pack"] = u.get("theme_pack", False)
         data["username_changed_at"] = u.get("username_changed_at")
+        data["username_history"] = u.get("username_history", [])
         data["views"] = u.get("views", 0)
         data["referrers"] = sorted(u.get("referrers", []), key=lambda r: r.get("count", 0), reverse=True)[:6]
         by_day = u.get("views_by_day", {})
@@ -315,9 +316,13 @@ async def change_username(body: UsernameChange, user: dict = Depends(current_use
                 raise HTTPException(429, f"username unavailable — you can change it again on {nxt}")
         if username in RESERVED_USERNAMES or await db.users.find_one({"username": username}):
             raise HTTPException(409, "username unavailable")
+        now_iso = datetime.now(timezone.utc).isoformat()
         await db.users.update_one(
             {"_id": user["_id"]},
-            {"$set": {"username": username, "username_changed_at": datetime.now(timezone.utc).isoformat()}},
+            {
+                "$set": {"username": username, "username_changed_at": now_iso},
+                "$push": {"username_history": {"username": user["username"], "changed_at": now_iso}},
+            },
         )
     fresh = await db.users.find_one({"_id": user["_id"]})
     return public_user(fresh, owner=True)
@@ -328,7 +333,10 @@ async def get_profile(username: str):
     user = await db.users.find_one({"username": username.strip().lower()})
     if not user:
         raise HTTPException(404, "Profile not found")
-    return public_user(user)
+    data = public_user(user)
+    top = await db.users.find_one({"views": {"$gt": 0}}, sort=[("views", -1)])
+    data["crowned"] = bool(top and top["_id"] == user["_id"])
+    return data
 
 
 @api_router.get("/leaderboard")

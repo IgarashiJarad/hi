@@ -31,7 +31,7 @@ function Vinyl({ image, playing }) {
   );
 }
 
-export function LastfmCard({ data, loading, error, onRetry }) {
+export function LastfmCard({ data, loading, error, onRetry, pinned }) {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef(null);
 
@@ -65,10 +65,11 @@ export function LastfmCard({ data, loading, error, onRetry }) {
     );
   }
 
-  if (!data) return null;
+  if (!data && !pinned) return null;
 
-  const now = data.now_playing;
-  const recent = data.tracks.filter((t) => !t.now_playing).slice(0, 4);
+  const now = data?.now_playing;
+  const recent = data ? data.tracks.filter((t) => !t.now_playing).slice(0, 4) : [];
+  const previewSrc = now?.preview_url || pinned?.preview_url;
 
   return (
     <motion.div
@@ -80,24 +81,26 @@ export function LastfmCard({ data, loading, error, onRetry }) {
     >
       <div className="mb-4 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-          <AudioLines size={13} /> last.fm
+          <AudioLines size={13} /> {data ? "last.fm" : "music"}
         </span>
-        <a
-          data-testid="lastfm-profile-link"
-          href={`https://www.last.fm/user/${data.user}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ExternalLink size={14} />
-        </a>
+        {data && (
+          <a
+            data-testid="lastfm-profile-link"
+            href={`https://www.last.fm/user/${data.user}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ExternalLink size={14} />
+          </a>
+        )}
       </div>
 
-      {now?.preview_url && (
+      {previewSrc && (
         <audio
           ref={audioRef}
           data-testid="lastfm-preview-audio"
-          src={now.preview_url}
+          src={previewSrc}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onEnded={() => setPlaying(false)}
@@ -117,6 +120,25 @@ export function LastfmCard({ data, loading, error, onRetry }) {
           {now.preview_url && (
             <button
               data-testid="lastfm-preview-btn"
+              onClick={togglePlay}
+              title={playing ? "pause preview" : "play 30s preview"}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8B5CF6]/25 text-[#A78BFA] transition-colors hover:bg-[#8B5CF6]/40"
+            >
+              {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+            </button>
+          )}
+        </div>
+      ) : pinned ? (
+        <div data-testid="pinned-track" className="mb-4 flex items-center gap-4 rounded-2xl tint-sage p-3.5">
+          <Vinyl image={pinned.image_url} playing={playing} />
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#A78BFA]">pinned track</p>
+            <p data-testid="pinned-track-name" className="truncate font-mono text-sm font-medium">{pinned.name}</p>
+            <p data-testid="pinned-track-artist" className="truncate text-xs text-muted-foreground">{pinned.artist}</p>
+          </div>
+          {pinned.preview_url && (
+            <button
+              data-testid="pinned-preview-btn"
               onClick={togglePlay}
               title={playing ? "pause preview" : "play 30s preview"}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8B5CF6]/25 text-[#A78BFA] transition-colors hover:bg-[#8B5CF6]/40"

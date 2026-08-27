@@ -21,6 +21,7 @@ export default function Profile() {
   const [discord, setDiscord] = useState({ loading: false, data: null, error: null });
   const [lastfm, setLastfm] = useState({ loading: false, data: null, error: null });
   const [presence, setPresence] = useState(null);
+  const [pinned, setPinned] = useState(null);
 
   const loadDiscord = useCallback(async (id) => {
     setDiscord({ loading: true, data: null, error: null });
@@ -61,6 +62,9 @@ export default function Profile() {
   useEffect(() => {
     if (!profile) return;
     document.title = `${profile.display_name || profile.username} — dontblink`;
+    if (profile.pinned_track) {
+      api.get("/track/preview", { params: { q: profile.pinned_track } }).then((r) => setPinned(r.data)).catch(() => setPinned(null));
+    }
     if (profile.discord_id) {
       loadDiscord(profile.discord_id);
       const loadPresence = () =>
@@ -111,7 +115,7 @@ export default function Profile() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease }}
-        className="mx-auto max-w-xl px-4 py-14 sm:py-20"
+        className="mx-auto max-w-3xl px-4 py-14 sm:py-20"
       >
         <header className="mb-10 text-center">
           <motion.div
@@ -160,22 +164,46 @@ export default function Profile() {
           )}
         </header>
 
-        <div className="space-y-5">
-          {profile.discord_id && (
-            <DiscordCard data={discord.data} loading={discord.loading} error={discord.error} onRetry={() => loadDiscord(profile.discord_id)} presence={presence} />
-          )}
-          {profile.lastfm_username && (
-            <LastfmCard data={lastfm.data} loading={lastfm.loading} error={lastfm.error} onRetry={() => loadLastfm(profile.lastfm_username, true)} />
-          )}
-          {profile.youtube_input && <YouTubeCard input={profile.youtube_input} />}
-          {profile.twitch_channel && <TwitchCard channel={profile.twitch_channel} />}
-          <SocialLinks links={profile.links} username={profile.username} />
-          {!profile.discord_id && !profile.lastfm_username && !profile.links.length && (
-            <p className="rounded-3xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-              a blank canvas — for now
-            </p>
-          )}
-        </div>
+        {(() => {
+          const showMusic = !!(profile.lastfm_username || pinned);
+          const hasLinks = profile.links.length > 0;
+          const hasYt = !!profile.youtube_input;
+          const hasTw = !!profile.twitch_channel;
+          return (
+            <div className="grid gap-5 lg:grid-cols-2">
+              {profile.discord_id && (
+                <div className="lg:col-span-2">
+                  <DiscordCard data={discord.data} loading={discord.loading} error={discord.error} onRetry={() => loadDiscord(profile.discord_id)} presence={presence} />
+                </div>
+              )}
+              {showMusic && (
+                <div className={hasLinks ? "" : "lg:col-span-2"}>
+                  <LastfmCard data={lastfm.data} loading={profile.lastfm_username ? lastfm.loading : false} error={lastfm.error} onRetry={() => profile.lastfm_username && loadLastfm(profile.lastfm_username, true)} pinned={pinned} />
+                </div>
+              )}
+              {hasLinks && (
+                <div className={showMusic ? "" : "lg:col-span-2"}>
+                  <SocialLinks links={profile.links} username={profile.username} />
+                </div>
+              )}
+              {hasYt && (
+                <div className={hasTw ? "" : "lg:col-span-2"}>
+                  <YouTubeCard input={profile.youtube_input} />
+                </div>
+              )}
+              {hasTw && (
+                <div className={hasYt ? "" : "lg:col-span-2"}>
+                  <TwitchCard channel={profile.twitch_channel} />
+                </div>
+              )}
+              {!profile.discord_id && !showMusic && !hasLinks && !hasYt && !hasTw && (
+                <p className="rounded-3xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground lg:col-span-2">
+                  a blank canvas — for now
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         <footer className="mt-14 text-center">
           <Link data-testid="made-with-badge" to="/" className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground">

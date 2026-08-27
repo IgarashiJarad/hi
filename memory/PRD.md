@@ -93,6 +93,10 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Server gates youtube/twitch fields to premium (403); dashboard Connections has both inputs with lock overlay for free users
 - Owner role is now UID-based (OWNER_UIDS="2") so it survives renames; Owner gets unlimited username changes (cooldown skipped)
 
+## Implemented (2026-08-27, iteration 20)
+- Profile song pin: dashboard Connections → pinned track input; backend /api/track/preview (Deezer, iTunes fallback) shared with Last.fm now-playing lookup; profile shows pinned track with playable 30s preview whenever the user isn't listening live
+- Profile layout: two-column grid (lg) — Discord full width, Last.fm beside social links, YouTube beside Twitch; single items span full width
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

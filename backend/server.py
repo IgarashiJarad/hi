@@ -132,6 +132,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "uid": u.get("uid"),
         "youtube_input": u.get("youtube_input"),
         "twitch_channel": u.get("twitch_channel"),
+        "pinned_track": u.get("pinned_track"),
     }
     if owner:
         data["email"] = u.get("email")
@@ -233,6 +234,7 @@ class ProfileUpdate(BaseModel):
     theme_auto: bool = False
     youtube_input: Optional[str] = None
     twitch_channel: Optional[str] = None
+    pinned_track: Optional[str] = None
 
 
 async def next_uid() -> int:
@@ -325,6 +327,7 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         "theme_auto": body.theme_auto,
         "youtube_input": body.youtube_input.strip() if body.youtube_input else None,
         "twitch_channel": re.sub(r"[^a-zA-Z0-9_]", "", body.twitch_channel).lower() if body.twitch_channel else None,
+        "pinned_track": body.pinned_track.strip() if body.pinned_track else None,
     }
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     fresh = await db.users.find_one({"_id": user["_id"]})
@@ -439,6 +442,52 @@ async def discord_lookup(discord_id: str):
     return data
 
 
+# ---------- Track preview lookup (Deezer, iTunes fallback) ----------
+
+async def find_track(query: str):
+    try:
+        r = await http.get("https://api.deezer.com/search", params={"q": query, "limit": 1})
+        items = r.json().get("data", [])
+        if items:
+            it = items[0]
+            return {
+                "name": it.get("title"),
+                "artist": (it.get("artist") or {}).get("name"),
+                "image_url": (it.get("album") or {}).get("cover_medium"),
+                "preview_url": it.get("preview"),
+            }
+    except Exception:
+        pass
+    try:
+        r = await http.get(
+            "https://itunes.apple.com/search",
+            params={"term": query, "media": "music", "entity": "song", "limit": 1},
+        )
+        results = r.json().get("results", [])
+        if results:
+            it = results[0]
+            return {
+                "name": it.get("trackName"),
+                "artist": it.get("artistName"),
+                "image_url": it.get("artworkUrl100"),
+                "preview_url": it.get("previewUrl"),
+            }
+    except Exception:
+        pass
+    return None
+
+
+@api_router.get("/track/preview")
+async def track_preview(q: str):
+    q = q.strip()
+    if not q or len(q) > 120:
+        raise HTTPException(400, "Invalid track query")
+    res = await find_track(q)
+    if not res or not res.get("preview_url"):
+        raise HTTPException(404, "Track not found")
+    return res
+
+
 # ---------- Last.fm proxy ----------
 
 _lastfm_cache = {}
@@ -506,25 +555,9 @@ async def lastfm_recent(username: str, limit: int = 10):
     tracks = [normalize_track(t) for t in raw if isinstance(t, dict)]
     now_playing = next((t for t in tracks if t["now_playing"]), None)
     if now_playing:
-        try:
-            q = f"{now_playing['artist']} {now_playing['name']}"
-            r = await http.get("https://api.deezer.com/search", params={"q": q, "limit": 1})
-            items = r.json().get("data", [])
-            if items and items[0].get("preview"):
-                now_playing["preview_url"] = items[0]["preview"]
-        except Exception:
-            pass
-        if not now_playing.get("preview_url"):
-            try:
-                r = await http.get(
-                    "https://itunes.apple.com/search",
-                    params={"term": f"{now_playing['artist']} {now_playing['name']}", "media": "music", "entity": "song", "limit": 1},
-                )
-                results = r.json().get("results", [])
-                if results and results[0].get("previewUrl"):
-                    now_playing["preview_url"] = results[0]["previewUrl"]
-            except Exception:
-                pass
+        prev = await find_track(f"{now_playing['artist']} {now_playing['name']}")
+        if prev and prev.get("preview_url"):
+            now_playing["preview_url"] = prev["preview_url"]
     result = {"user": username, "now_playing": now_playing, "tracks": tracks}
     _lastfm_cache[cache_key] = {"at": time.time(), "data": result}
     return result

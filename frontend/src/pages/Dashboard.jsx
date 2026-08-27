@@ -93,6 +93,7 @@ export default function Dashboard() {
   const [lastfmPreview, setLastfmPreview] = useState({ loading: false, data: null, error: null });
   const [youtubeInput, setYoutubeInput] = useState(user.youtube_input || "");
   const [twitchChannel, setTwitchChannel] = useState(user.twitch_channel || "");
+  const [pinnedTrack, setPinnedTrack] = useState(user.pinned_track || "");
   const [newUsername, setNewUsername] = useState(user.username);
   const [unameStatus, setUnameStatus] = useState(null);
 
@@ -174,6 +175,7 @@ export default function Dashboard() {
     theme_auto: themeAuto,
     youtube_input: youtubeInput.trim() || null,
     twitch_channel: twitchChannel.trim() || null,
+    pinned_track: pinnedTrack.trim() || null,
     ...over,
   });
 
@@ -695,6 +697,15 @@ export default function Dashboard() {
                       test
                     </button>
                   </div>
+                  <label className={`${label} mt-4`} htmlFor="pinned-track-input">pinned track</label>
+                  <input
+                    id="pinned-track-input"
+                    data-testid="pinned-track-input"
+                    value={pinnedTrack}
+                    onChange={(e) => setPinnedTrack(e.target.value)}
+                    placeholder="song — artist (plays on your page when you're not listening)"
+                    className={field}
+                  />
                   {(lastfmPreview.loading || lastfmPreview.data || lastfmPreview.error) && (
                     <div className="mt-4">
                       <LastfmCard data={lastfmPreview.data} loading={lastfmPreview.loading} error={lastfmPreview.error} onRetry={testLastfm} />

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Trash2, ArrowUp, ArrowDown, Copy, LogOut, ExternalLink, ImagePlus, Lock, Check, MousePointerClick } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Copy, LogOut, ExternalLink, ImagePlus, Lock, Check, MousePointerClick, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { api, errMsg } from "../lib/api";
@@ -110,6 +110,24 @@ export default function Settings() {
     } catch (err) {
       toast.error(errMsg(err, "Could not start checkout"));
       setUnlocking(false);
+    }
+  };
+
+  const applyTheme = async (t) => {
+    setTheme(t);
+    try {
+      const r = await api.put("/auth/profile", {
+        display_name: displayName,
+        bio,
+        discord_id: discordId.trim() || null,
+        lastfm_username: lastfmUser.trim() || null,
+        links,
+        theme: t,
+      });
+      setUser(r.data);
+      toast.success(t === "dark" ? "Switched to dark mode" : t === "light" ? "Switched to light mode" : "Theme applied");
+    } catch (e) {
+      toast.error(errMsg(e, "Could not apply theme"));
     }
   };
 
@@ -306,9 +324,26 @@ export default function Settings() {
           <section className="rounded-3xl border border-border bg-card p-6 sm:p-7">
             <div className="mb-1 flex items-center justify-between gap-2">
               <h2 className="font-display text-lg font-bold">Page theme</h2>
-              {!user.theme_pack && <span className="text-xs text-muted-foreground">3 more in the pack · {THEME_PACK_PRICE}</span>}
+              <div data-testid="mode-toggle" className="flex items-center gap-1 rounded-full border border-border bg-paper p-1">
+                <button
+                  data-testid="mode-light-btn"
+                  onClick={() => applyTheme("light")}
+                  title="light mode"
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "light" ? "bg-ink text-paper" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Sun size={13} />
+                </button>
+                <button
+                  data-testid="mode-dark-btn"
+                  onClick={() => applyTheme("dark")}
+                  title="dark mode"
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${theme === "dark" ? "bg-ink text-paper" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Moon size={13} />
+                </button>
+              </div>
             </div>
-            <p className="mb-5 text-xs text-muted-foreground">Paper and Charcoal are free — the pack unlocks every theme, forever.</p>
+            <p className="mb-5 text-xs text-muted-foreground">Paper and Charcoal are free — the pack ({THEME_PACK_PRICE}) unlocks every theme, forever. Changes save instantly.</p>
             <div data-testid="theme-grid" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {THEMES.map((t) => {
                 const locked = !t.free && !user.theme_pack;
@@ -317,7 +352,7 @@ export default function Settings() {
                   <button
                     key={t.id}
                     data-testid={`theme-option-${t.id}`}
-                    onClick={() => (locked ? unlockThemes() : setTheme(t.id))}
+                    onClick={() => (locked ? unlockThemes() : applyTheme(t.id))}
                     title={t.desc}
                     className={`rounded-2xl border p-2 text-left transition-all duration-300 ${active ? "border-sage shadow-[0_8px_24px_rgba(63,94,77,0.15)]" : "border-border hover:border-ink/25"}`}
                   >

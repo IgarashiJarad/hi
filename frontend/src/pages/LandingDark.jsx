@@ -16,7 +16,7 @@ const DEMO_LINKS = ["https://github.com", "https://youtube.com", "https://open.s
 
 const PURPLE = "#8B5CF6";
 
-function Nav() {
+export function Nav() {
   const { user } = useAuth();
   return (
     <header className="fixed inset-x-0 top-5 z-50 flex justify-center px-4">
@@ -34,9 +34,9 @@ function Nav() {
           dontblink
         </Link>
         <div className="hidden items-center gap-1 sm:flex">
-          <a href="#compare" data-testid="nav-compare" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">compare</a>
-          <a href="#leaderboard" data-testid="nav-leaderboard" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">leaderboard</a>
-          <a href="#pricing" data-testid="nav-pricing" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">pricing</a>
+          <Link to="/compare" data-testid="nav-compare" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">compare</Link>
+          <Link to="/leaderboard" data-testid="nav-leaderboard" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">leaderboard</Link>
+          <Link to="/pricing" data-testid="nav-pricing" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">pricing</Link>
         </div>
         <div className="flex items-center gap-2">
           {user ? (
@@ -305,7 +305,7 @@ function Cell({ v, highlight }) {
   return <span className={`text-xs ${highlight ? "text-[#A78BFA]" : "text-white/40"}`}>{v}</span>;
 }
 
-function Compare() {
+export function Compare() {
   return (
     <section id="compare" className="mx-auto max-w-5xl px-6 py-24 sm:py-32">
       <FadeUp>
@@ -337,7 +337,7 @@ function Compare() {
 
 const MEDALS = ["#F5C518", "#C0C0C0", "#CD7F32"];
 
-function Leaderboard() {
+export function Leaderboard() {
   const [leaders, setLeaders] = useState(null);
 
   useEffect(() => {
@@ -395,7 +395,7 @@ function Leaderboard() {
   );
 }
 
-function Pricing() {
+export function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -558,12 +558,6 @@ export default function Landing() {
           ))}
         </div>
       </section>
-
-      <Compare />
-
-      <Leaderboard />
-
-      <Pricing />
 
       <Playground />
 

@@ -49,6 +49,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Leaderboard: GET /api/leaderboard (top 10 by views, public); landing section with medal-colored ranks, avatars, view counts, links to pages
 - Pricing section: Free vs Premium ($4.99 one-time) cards; unlock button starts Stripe checkout when logged in, sends guests to register; shows "unlocked" state when owned
 
+## Implemented (2026-08-27, iteration 9)
+- Compare, Leaderboard, Pricing moved off the landing into standalone routes /compare, /leaderboard, /pricing (shared dark shell in InfoPages.jsx; Nav + sections exported from LandingDark.jsx; landing keeps hero, showcase, marquee, features, playground)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

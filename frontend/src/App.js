@@ -4,6 +4,7 @@ import Lenis from "lenis";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/LandingDark";
+import { ComparePage, LeaderboardPage, PricingPage } from "@/pages/InfoPages";
 import AuthPage from "@/pages/Auth";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
@@ -68,6 +69,9 @@ function AppInner() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="/:username" element={<Profile />} />
       </Routes>

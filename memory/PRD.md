@@ -97,6 +97,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Profile song pin: dashboard Connections → pinned track input; backend /api/track/preview (Deezer, iTunes fallback) shared with Last.fm now-playing lookup; profile shows pinned track with playable 30s preview whenever the user isn't listening live
 - Profile layout: two-column grid (lg) — Discord full width, Last.fm beside social links, YouTube beside Twitch; single items span full width
 
+## Implemented (2026-08-27, iteration 21)
+- Twitch clip fallback: offline channels now also fetch their all-time top clip via Twitch GQL (public client, persisted ClipsCards__User hash 90c33f5e…). Profile chain: live stream → latest VOD → top clip embed → channel link note
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

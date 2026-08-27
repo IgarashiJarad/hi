@@ -95,6 +95,11 @@ export function TwitchCard({ channel }) {
           <iframe data-testid="twitch-vod-embed" src={`https://player.twitch.tv/?video=v${status.vod_id}&parent=${parent}&autoplay=false`} className="aspect-video w-full border-0" allowFullScreen title="Twitch latest broadcast" />
           <p className="px-5 py-3 text-xs text-muted-foreground">offline right now — showing the latest broadcast</p>
         </>
+      ) : status?.clip ? (
+        <>
+          <iframe data-testid="twitch-clip-embed" src={`https://clips.twitch.tv/embed?clip=${status.clip.slug}&parent=${parent}&autoplay=false`} className="aspect-video w-full border-0" allowFullScreen title="Twitch top clip" />
+          <p data-testid="twitch-clip-title" className="truncate px-5 py-3 text-xs text-muted-foreground">offline right now — top clip: {status.clip.title}</p>
+        </>
       ) : status ? (
         <p data-testid="twitch-offline" className="px-5 pb-5 text-sm text-muted-foreground">
           offline right now — <a className="underline underline-offset-4" href={`https://twitch.tv/${channel}`} target="_blank" rel="noreferrer">twitch.tv/{channel}</a>

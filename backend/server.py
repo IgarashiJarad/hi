@@ -784,6 +784,29 @@ async def youtube_resolve(input: str):
     return data
 
 
+TWITCH_GQL_HASH = "90c33f5e6465122fba8f9371e2a97076f9ed06c6fed3788d002ab9eba8f91d88"
+
+
+async def top_clip(channel: str):
+    try:
+        r = await http.post(
+            "https://gql.twitch.tv/gql",
+            headers={"Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko"},
+            json=[{
+                "operationName": "ClipsCards__User",
+                "variables": {"login": channel, "limit": 1, "criteria": {"filter": "ALL_TIME", "sort": "VIEWS_DESC"}, "cursor": None},
+                "extensions": {"persistedQuery": {"version": 1, "sha256Hash": TWITCH_GQL_HASH}},
+            }],
+        )
+        edges = (((r.json()[0].get("data") or {}).get("user") or {}).get("clips") or {}).get("edges") or []
+        if edges:
+            n = edges[0]["node"]
+            return {"slug": n.get("slug"), "title": n.get("title")}
+    except Exception:
+        pass
+    return None
+
+
 @api_router.get("/twitch/{channel}")
 async def twitch_status(channel: str):
     channel = re.sub(r"[^a-zA-Z0-9_]", "", channel).lower()
@@ -800,6 +823,9 @@ async def twitch_status(channel: str):
             vod = await http.get(f"https://decapi.me/twitch/vod_replay/{channel}")
             vm = re.search(r"videos/(\d+)", vod.text or "")
             data["vod_id"] = vm.group(1) if vm else None
+            clip = await top_clip(channel)
+            if clip:
+                data["clip"] = clip
     except Exception:
         raise HTTPException(502, "Twitch lookup is unavailable right now")
     _tw_cache[channel] = {"at": time.time(), "data": data}

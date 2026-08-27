@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   LayoutGrid, Palette, Link2, Plug, Gem, Eye, Search, Copy, LogOut, ExternalLink,
   Share2, Plus, Trash2, ArrowUp, ArrowDown, ImagePlus, Lock, Check, MousePointerClick,
-  Sun, Moon, ChevronRight, User, MessageSquare, AudioLines, Sparkles,
+  Sun, Moon, ChevronRight, User, MessageSquare, AudioLines, Sparkles, Youtube, Twitch,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
@@ -91,6 +91,8 @@ export default function Dashboard() {
   const avatarInput = useRef(null);
   const [discordPreview, setDiscordPreview] = useState({ loading: false, data: null, error: null });
   const [lastfmPreview, setLastfmPreview] = useState({ loading: false, data: null, error: null });
+  const [youtubeInput, setYoutubeInput] = useState(user.youtube_input || "");
+  const [twitchChannel, setTwitchChannel] = useState(user.twitch_channel || "");
   const [newUsername, setNewUsername] = useState(user.username);
   const [unameStatus, setUnameStatus] = useState(null);
 
@@ -170,6 +172,8 @@ export default function Dashboard() {
     links,
     theme,
     theme_auto: themeAuto,
+    youtube_input: youtubeInput.trim() || null,
+    twitch_channel: twitchChannel.trim() || null,
     ...over,
   });
 
@@ -695,6 +699,50 @@ export default function Dashboard() {
                     <div className="mt-4">
                       <LastfmCard data={lastfmPreview.data} loading={lastfmPreview.loading} error={lastfmPreview.error} onRetry={testLastfm} />
                     </div>
+                  )}
+                </section>
+
+                <section className="relative rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Youtube size={16} className="text-[#A78BFA]" />
+                    <h2 className="font-display text-lg font-bold">YouTube</h2>
+                    <span className="rounded-full bg-[#8B5CF6]/20 px-2 py-0.5 text-[10px] font-medium text-[#A78BFA]">premium</span>
+                  </div>
+                  <p className="mb-5 text-xs text-white/40">Paste a video link to feature it, or your channel (like @yourname) and we'll always embed your latest upload.</p>
+                  <input
+                    data-testid="youtube-input"
+                    value={youtubeInput}
+                    onChange={(e) => setYoutubeInput(e.target.value)}
+                    placeholder="youtube.com/watch?v=… or @yourchannel"
+                    disabled={!user.theme_pack}
+                    className={`${field} disabled:opacity-40`}
+                  />
+                  {!user.theme_pack && (
+                    <button data-testid="youtube-lock-btn" onClick={unlockThemes} className="absolute inset-0 flex items-center justify-center gap-2 rounded-2xl bg-[#0d0714]/70 text-sm text-white/70 backdrop-blur-[2px] transition-colors hover:text-white">
+                      <Lock size={15} /> unlock with premium
+                    </button>
+                  )}
+                </section>
+
+                <section className="relative rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Twitch size={16} className="text-[#A78BFA]" />
+                    <h2 className="font-display text-lg font-bold">Twitch</h2>
+                    <span className="rounded-full bg-[#8B5CF6]/20 px-2 py-0.5 text-[10px] font-medium text-[#A78BFA]">premium</span>
+                  </div>
+                  <p className="mb-5 text-xs text-white/40">Your channel name — when you're live your stream broadcasts on your page, otherwise we show your latest broadcast.</p>
+                  <input
+                    data-testid="twitch-input"
+                    value={twitchChannel}
+                    onChange={(e) => setTwitchChannel(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                    placeholder="your twitch channel"
+                    disabled={!user.theme_pack}
+                    className={`${field} disabled:opacity-40`}
+                  />
+                  {!user.theme_pack && (
+                    <button data-testid="twitch-lock-btn" onClick={unlockThemes} className="absolute inset-0 flex items-center justify-center gap-2 rounded-2xl bg-[#0d0714]/70 text-sm text-white/70 backdrop-blur-[2px] transition-colors hover:text-white">
+                      <Lock size={15} /> unlock with premium
+                    </button>
                   )}
                 </section>
                 <SaveBtn />

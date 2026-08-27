@@ -9,6 +9,7 @@ import { DiscordCard } from "../components/DiscordCard";
 import { LastfmCard } from "../components/LastfmCard";
 import { SocialLinks } from "../components/SocialLinks";
 import { RolePills } from "../components/RolePills";
+import { YouTubeCard, TwitchCard } from "../components/MediaCards";
 
 export default function Profile() {
   const { username } = useParams();
@@ -166,6 +167,8 @@ export default function Profile() {
           {profile.lastfm_username && (
             <LastfmCard data={lastfm.data} loading={lastfm.loading} error={lastfm.error} onRetry={() => loadLastfm(profile.lastfm_username, true)} />
           )}
+          {profile.youtube_input && <YouTubeCard input={profile.youtube_input} />}
+          {profile.twitch_channel && <TwitchCard channel={profile.twitch_channel} />}
           <SocialLinks links={profile.links} username={profile.username} />
           {!profile.discord_id && !profile.lastfm_username && !profile.links.length && (
             <p className="rounded-3xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">

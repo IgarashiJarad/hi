@@ -87,6 +87,12 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Owner premium bypass: has_premium() = theme_pack OR Owner role (UID #2, hi2w) — server-enforced for paid themes, checkout blocked for owner, dashboard/pricing show unlocked
 - Anti-bot signup: honeypot field (hidden "website" input; filled = rejected) + IP rate limits (register 5/hour, login 10/5min; in-memory per worker, X-Forwarded-For aware)
 
+## Implemented (2026-08-27, iteration 19)
+- YouTube embed (premium): video URL embeds directly; channel/handle resolves via channel page + RSS to always show the latest upload. GET /api/youtube/resolve (10min cache)
+- Twitch embed (premium): decapi.me uptime for live detection (30s cache, profile polls 60s) — live streams broadcast in-page, offline falls back to latest VOD (vod_replay). GET /api/twitch/{channel}
+- Server gates youtube/twitch fields to premium (403); dashboard Connections has both inputs with lock overlay for free users
+- Owner role is now UID-based (OWNER_UIDS="2") so it survives renames; Owner gets unlimited username changes (cooldown skipped)
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

@@ -95,6 +95,11 @@ ROLE_DEFS = {
     "v1": {"id": "v1", "label": "V1", "color": "#F5C518", "icon": "zap"},
 }
 OWNER_SET = {x.strip().lower() for x in os.environ.get("OWNER_USERNAMES", "").split(",") if x.strip()}
+OWNER_UIDS = {int(x) for x in os.environ.get("OWNER_UIDS", "2").split(",") if x.strip()}
+
+
+def is_owner(u: dict) -> bool:
+    return u.get("uid") in OWNER_UIDS or (u.get("username") or "").lower() in OWNER_SET
 DEV_SET = {x.strip().lower() for x in os.environ.get("DEVELOPER_USERNAMES", "").split(",") if x.strip()}
 V1_CUTOFF = "2027-01-01"
 
@@ -102,7 +107,7 @@ V1_CUTOFF = "2027-01-01"
 def user_roles(u: dict) -> list:
     out = []
     uname = (u.get("username") or "").lower()
-    if uname in OWNER_SET:
+    if is_owner(u):
         out.append(ROLE_DEFS["owner"])
     if uname in DEV_SET:
         out.append(ROLE_DEFS["developer"])
@@ -125,6 +130,8 @@ def public_user(u: dict, owner: bool = False) -> dict:
         "theme_auto": u.get("theme_auto", False),
         "roles": user_roles(u),
         "uid": u.get("uid"),
+        "youtube_input": u.get("youtube_input"),
+        "twitch_channel": u.get("twitch_channel"),
     }
     if owner:
         data["email"] = u.get("email")
@@ -201,7 +208,7 @@ def client_ip(request: Request) -> str:
 
 
 def has_premium(u: dict) -> bool:
-    return bool(u.get("theme_pack")) or (u.get("username", "").lower() in OWNER_SET)
+    return bool(u.get("theme_pack")) or is_owner(u)
 
 
 class RegisterBody(BaseModel):
@@ -224,6 +231,8 @@ class ProfileUpdate(BaseModel):
     links: List[LinkItem] = []
     theme: str = "light"
     theme_auto: bool = False
+    youtube_input: Optional[str] = None
+    twitch_channel: Optional[str] = None
 
 
 async def next_uid() -> int:
@@ -298,6 +307,8 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         raise HTTPException(400, "Unknown theme")
     if body.theme not in FREE_THEMES and not has_premium(user):
         raise HTTPException(403, "That theme is part of the paid theme pack")
+    if (body.youtube_input or body.twitch_channel) and not has_premium(user):
+        raise HTTPException(403, "YouTube and Twitch embeds are premium features")
     for link in body.links:
         if not re.match(r"^https?://", link.url):
             raise HTTPException(400, f"Link must start with http:// or https:// : {link.url}")
@@ -312,6 +323,8 @@ async def update_profile(body: ProfileUpdate, user: dict = Depends(current_user)
         "links": [{**l.model_dump(), "clicks": existing_clicks.get(l.url, 0)} for l in body.links],
         "theme": body.theme,
         "theme_auto": body.theme_auto,
+        "youtube_input": body.youtube_input.strip() if body.youtube_input else None,
+        "twitch_channel": re.sub(r"[^a-zA-Z0-9_]", "", body.twitch_channel).lower() if body.twitch_channel else None,
     }
     await db.users.update_one({"_id": user["_id"]}, {"$set": update})
     fresh = await db.users.find_one({"_id": user["_id"]})
@@ -337,7 +350,7 @@ async def change_username(body: UsernameChange, user: dict = Depends(current_use
         raise HTTPException(400, "Username must be 3-20 chars: letters, numbers, underscore")
     if username != user["username"]:
         last = user.get("username_changed_at")
-        if last:
+        if last and not is_owner(user):
             try:
                 last_dt = datetime.fromisoformat(last)
             except ValueError:
@@ -683,6 +696,81 @@ async def digest_loop():
                     logger.info(f"Sent {n} weekly digests")
         except Exception as e:
             logger.error(f"Digest loop error: {e}")
+
+
+# ---------- YouTube & Twitch embeds (premium profile media) ----------
+
+_yt_cache = {}
+_tw_cache = {}
+
+
+@api_router.get("/youtube/resolve")
+async def youtube_resolve(input: str):
+    raw = input.strip()
+    if not raw or len(raw) > 200:
+        raise HTTPException(400, "Invalid YouTube link")
+    hit = _yt_cache.get(raw)
+    if hit and time.time() - hit["at"] < 600:
+        return hit["data"]
+    m = re.search(r"(?:youtube\.com/(?:watch\?v=|shorts/|embed/|live/)|youtu\.be/)([\w-]{6,15})", raw)
+    if m:
+        data = {"mode": "video", "video_id": m.group(1)}
+        _yt_cache[raw] = {"at": time.time(), "data": data}
+        return data
+    hm = re.search(r"youtube\.com/(@[\w.-]+|channel/[\w-]+|c/[\w-]+|user/[\w-]+)", raw)
+    handle = hm.group(1) if hm else None
+    if not handle and re.fullmatch(r"@?[\w][\w.-]{1,40}", raw):
+        handle = raw if raw.startswith("@") else f"@{raw}"
+    if not handle:
+        raise HTTPException(400, "Paste a YouTube video link or a channel (like @yourname)")
+    try:
+        page = await http.get(
+            f"https://www.youtube.com/{handle}",
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            follow_redirects=True,
+        )
+        cid_m = re.search(r'"channelId":"([\w-]{10,30})"', page.text)
+        if not cid_m:
+            raise HTTPException(404, "Channel not found")
+        feed = await http.get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid_m.group(1)}")
+        vid_m = re.search(r"<yt:videoId>([\w-]+)</yt:videoId>", feed.text)
+        title_m = re.search(r"<entry>.*?<title>(.*?)</title>", feed.text, re.S)
+        if not vid_m:
+            raise HTTPException(404, "No videos found on that channel")
+        data = {
+            "mode": "channel",
+            "channel": handle,
+            "video_id": vid_m.group(1),
+            "title": title_m.group(1) if title_m else None,
+        }
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(502, "YouTube lookup is unavailable right now")
+    _yt_cache[raw] = {"at": time.time(), "data": data}
+    return data
+
+
+@api_router.get("/twitch/{channel}")
+async def twitch_status(channel: str):
+    channel = re.sub(r"[^a-zA-Z0-9_]", "", channel).lower()
+    if not channel:
+        raise HTTPException(400, "Invalid Twitch channel")
+    hit = _tw_cache.get(channel)
+    if hit and time.time() - hit["at"] < 30:
+        return hit["data"]
+    try:
+        up = await http.get(f"https://decapi.me/twitch/uptime/{channel}")
+        live = "offline" not in up.text.lower() and up.status_code == 200
+        data = {"channel": channel, "live": live}
+        if not live:
+            vod = await http.get(f"https://decapi.me/twitch/vod_replay/{channel}")
+            vm = re.search(r"videos/(\d+)", vod.text or "")
+            data["vod_id"] = vm.group(1) if vm else None
+    except Exception:
+        raise HTTPException(502, "Twitch lookup is unavailable right now")
+    _tw_cache[channel] = {"at": time.time(), "data": data}
+    return data
 
 
 # ---------- Lanyard live presence ----------

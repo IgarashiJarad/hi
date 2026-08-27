@@ -62,7 +62,7 @@ function DemoProfileCard() {
           <img src={DEMO_AVATAR} alt="demo avatar" className="h-12 w-12 rounded-full object-cover" />
           <div>
             <p className="font-display font-bold leading-tight">wren</p>
-            <p className="text-xs text-muted-foreground">dontblink.page/wren</p>
+            <p className="text-xs text-muted-foreground">dontblink.site/wren</p>
           </div>
           <span className="ml-auto rounded-full bg-secondary px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             live demo
@@ -159,7 +159,7 @@ const FEATURES = [
     icon: Fingerprint,
     span: "md:col-span-6",
     title: "One quiet link",
-    body: "You get dontblink.page/you. Nothing loud, nothing cluttered. Just you, softly.",
+    body: "You get dontblink.site/you. Nothing loud, nothing cluttered. Just you, softly.",
     testid: "feature-link",
   },
 ];
@@ -291,7 +291,7 @@ export default function Landing() {
           </FadeUp>
           <FadeUp delay={0.68}>
             <div className="mt-8 flex max-w-md items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-              <span className="pl-3 font-mono text-sm text-muted-foreground">dontblink.page/</span>
+              <span className="pl-3 font-mono text-sm text-muted-foreground">dontblink.site/</span>
               <input
                 data-testid="claim-username-input"
                 value={claim}

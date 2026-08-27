@@ -99,7 +99,7 @@ function ProfileMock() {
         </div>
         <div>
           <p className="font-display text-sm font-bold text-white">wren</p>
-          <p className="text-[10px] text-white/40">dontblink.page/wren</p>
+          <p className="text-[10px] text-white/40">dontblink.site/wren</p>
         </div>
         <span className="ml-auto rounded-full bg-[#43B581]/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#43B581]">online now</span>
       </div>
@@ -419,7 +419,7 @@ export function Pricing() {
     }
   };
 
-  const free = ["your quiet page at dontblink.page/you", "live Discord mirror + online status", "Last.fm now-playing vinyl", "12 links with auto favicons", "stats, referrers + 14-day sparkline", "Paper & Charcoal themes", "a tab icon that blinks back"];
+  const free = ["your quiet page at dontblink.site/you", "live Discord mirror + online status", "Last.fm now-playing vinyl", "12 links with auto favicons", "stats, referrers + 14-day sparkline", "Paper & Charcoal themes", "a tab icon that blinks back"];
   const premium = ["everything in free", "Moss, Ember & Dusk themes", "every future theme, automatically", "one-time payment — yours forever"];
 
   return (
@@ -519,7 +519,7 @@ export default function Landing() {
           </FadeUp>
           <FadeUp delay={0.7}>
             <div className="mx-auto mt-8 flex max-w-md items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1.5 backdrop-blur">
-              <span className="pl-4 font-mono text-xs text-white/40">dontblink.page/</span>
+              <span className="pl-4 font-mono text-xs text-white/40">dontblink.site/</span>
               <input
                 data-testid="claim-username-input"
                 value={claim}

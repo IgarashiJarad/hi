@@ -77,7 +77,7 @@ export default function AuthPage({ mode }) {
               <>
                 <div>
                   <div className="flex items-center gap-2 rounded-xl border border-input bg-secondary px-4 py-3 focus-within:border-sage">
-                    <span className="font-mono text-sm text-muted-foreground">dontblink.page/</span>
+                    <span className="font-mono text-sm text-muted-foreground">dontblink.site/</span>
                     <input
                       data-testid="register-username-input"
                       value={username}

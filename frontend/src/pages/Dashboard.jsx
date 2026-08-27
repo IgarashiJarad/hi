@@ -127,6 +127,9 @@ export default function Dashboard() {
   };
 
   const pageUrl = `${window.location.origin}/${user.username}`;
+  const lastChange = user.username_changed_at ? new Date(user.username_changed_at) : null;
+  const nextChange = lastChange ? new Date(lastChange.getTime() + 30 * 24 * 3600 * 1000) : null;
+  const coolingDown = !!(nextChange && nextChange > new Date());
 
   useEffect(() => {
     const sessionId = params.get("session_id");
@@ -449,7 +452,7 @@ export default function Dashboard() {
                   <h1 className="font-display text-2xl font-bold">Customize</h1>
                   <section className="rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">
                     <h2 className="mb-1 font-display text-lg font-bold">Username</h2>
-                    <p className="mb-4 text-xs text-white/40">This moves your whole page — dontblink.page/<span className="text-[#A78BFA]">you</span></p>
+                    <p className="mb-4 text-xs text-white/40">This moves your whole page — dontblink.site/<span className="text-[#A78BFA]">you</span></p>
                     <div className="flex gap-2">
                       <div className={`${field} flex items-center gap-2`}>
                         <span className="font-mono text-sm text-white/40">/</span>
@@ -458,7 +461,8 @@ export default function Dashboard() {
                           value={newUsername}
                           onChange={(e) => setNewUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
                           maxLength={20}
-                          className="w-full bg-transparent font-mono text-sm outline-none"
+                          disabled={coolingDown}
+                          className="w-full bg-transparent font-mono text-sm outline-none disabled:opacity-50"
                         />
                         {unameStatus === "checking" && <span className="shrink-0 text-xs text-white/40">checking…</span>}
                         {unameStatus === "available" && <Check size={15} className="shrink-0 text-[#A78BFA]" />}
@@ -466,13 +470,18 @@ export default function Dashboard() {
                       <button
                         data-testid="change-username-btn"
                         onClick={saveUsername}
-                        disabled={unameStatus !== "available"}
+                        disabled={coolingDown || unameStatus !== "available"}
                         className="shrink-0 rounded-xl bg-[#8B5CF6] px-5 text-sm font-medium text-white transition-colors hover:bg-[#7C4DEF] disabled:opacity-40"
                       >
                         change
                       </button>
                     </div>
                     {unameStatus === "taken" && <p data-testid="username-unavailable-msg" className="mt-2 text-xs text-red-400">username unavailable</p>}
+                    {coolingDown && (
+                      <p data-testid="username-cooldown-msg" className="mt-2 text-xs text-white/40">
+                        usernames change once a month — next change opens {nextChange.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
+                      </p>
+                    )}
                     {unameStatus === "invalid" && <p data-testid="username-invalid-msg" className="mt-2 text-xs text-red-400">3-20 chars: letters, numbers, underscore</p>}
                   </section>
                   <section className="rounded-2xl border border-white/10 bg-[#1c1130]/60 p-6">

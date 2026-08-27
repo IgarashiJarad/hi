@@ -122,6 +122,7 @@ def public_user(u: dict, owner: bool = False) -> dict:
     if owner:
         data["email"] = u.get("email")
         data["theme_pack"] = u.get("theme_pack", False)
+        data["username_changed_at"] = u.get("username_changed_at")
         data["views"] = u.get("views", 0)
         data["referrers"] = sorted(u.get("referrers", []), key=lambda r: r.get("count", 0), reverse=True)[:6]
         by_day = u.get("views_by_day", {})
@@ -293,9 +294,21 @@ async def change_username(body: UsernameChange, user: dict = Depends(current_use
     if not USERNAME_RE.match(username):
         raise HTTPException(400, "Username must be 3-20 chars: letters, numbers, underscore")
     if username != user["username"]:
+        last = user.get("username_changed_at")
+        if last:
+            try:
+                last_dt = datetime.fromisoformat(last)
+            except ValueError:
+                last_dt = None
+            if last_dt and datetime.now(timezone.utc) - last_dt < timedelta(days=30):
+                nxt = (last_dt + timedelta(days=30)).date().isoformat()
+                raise HTTPException(429, f"username unavailable — you can change it again on {nxt}")
         if username in RESERVED_USERNAMES or await db.users.find_one({"username": username}):
             raise HTTPException(409, "username unavailable")
-    await db.users.update_one({"_id": user["_id"]}, {"$set": {"username": username}})
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"username": username, "username_changed_at": datetime.now(timezone.utc).isoformat()}},
+        )
     fresh = await db.users.find_one({"_id": user["_id"]})
     return public_user(fresh, owner=True)
 

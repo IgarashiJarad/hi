@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Fingerprint, AudioLines, MessageSquare, Link2, Eye, MousePointerClick } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Fingerprint, AudioLines, MessageSquare, Link2, Eye, MousePointerClick, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { MaskedLine, FadeUp, ease } from "../components/motion";
@@ -34,8 +34,9 @@ function Nav() {
           dontblink
         </Link>
         <div className="hidden items-center gap-1 sm:flex">
-          <a href="#features" data-testid="nav-features" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">features</a>
-          <a href="#playground" data-testid="nav-playground" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">try it</a>
+          <a href="#compare" data-testid="nav-compare" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">compare</a>
+          <a href="#leaderboard" data-testid="nav-leaderboard" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">leaderboard</a>
+          <a href="#pricing" data-testid="nav-pricing" className="rounded-full px-3.5 py-2 text-sm text-white/60 transition-colors hover:text-white">pricing</a>
         </div>
         <div className="flex items-center gap-2">
           {user ? (
@@ -287,6 +288,183 @@ function Playground() {
   );
 }
 
+const COMPARE_ROWS = [
+  { label: "price to start", us: "free", linktree: "free", carrd: "free" },
+  { label: "premium price", us: "$4.99 once, forever", linktree: "$5–24 / month", carrd: "$19 / year" },
+  { label: "live Discord profile + status", us: true, linktree: false, carrd: false },
+  { label: "Last.fm now-playing vinyl", us: true, linktree: false, carrd: false },
+  { label: "auto-detected favicons", us: true, linktree: "paid", carrd: false },
+  { label: "page stats + referrers", us: true, linktree: "paid", carrd: "paid" },
+  { label: "dark theme included free", us: true, linktree: "paid", carrd: false },
+  { label: "tab icon that blinks back", us: true, linktree: false, carrd: false },
+];
+
+function Cell({ v, highlight }) {
+  if (v === true) return <Check size={16} className={highlight ? "text-[#A78BFA]" : "text-white/50"} />;
+  if (v === false) return <X size={15} className="text-white/20" />;
+  return <span className={`text-xs ${highlight ? "text-[#A78BFA]" : "text-white/40"}`}>{v}</span>;
+}
+
+function Compare() {
+  return (
+    <section id="compare" className="mx-auto max-w-5xl px-6 py-24 sm:py-32">
+      <FadeUp>
+        <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#A78BFA]">why switch</p>
+        <h2 className="mb-4 font-display text-4xl font-bold text-white sm:text-5xl">The clear edge.</h2>
+        <p className="mb-12 max-w-lg text-sm text-white/50 sm:text-base">Same job as the usual suspects — but alive. Your page moves with your Discord and your music, and premium is a one-time coffee, not a monthly rent.</p>
+      </FadeUp>
+      <FadeUp delay={0.1}>
+        <div data-testid="compare-table" className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+          <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] border-b border-white/10 bg-white/[0.03] px-5 py-4 text-xs uppercase tracking-[0.14em] text-white/40 sm:px-7">
+            <span />
+            <span className="font-display text-sm font-bold normal-case tracking-normal text-[#A78BFA]">dontblink</span>
+            <span>linktree</span>
+            <span>carrd</span>
+          </div>
+          {COMPARE_ROWS.map((r, i) => (
+            <div key={r.label} data-testid={`compare-row-${i}`} className="grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center border-b border-white/5 px-5 py-3.5 last:border-0 sm:px-7">
+              <span className="pr-3 text-sm text-white/70">{r.label}</span>
+              <span className="flex justify-start"><Cell v={r.us} highlight /></span>
+              <span className="flex justify-start"><Cell v={r.linktree} /></span>
+              <span className="flex justify-start"><Cell v={r.carrd} /></span>
+            </div>
+          ))}
+        </div>
+      </FadeUp>
+    </section>
+  );
+}
+
+const MEDALS = ["#F5C518", "#C0C0C0", "#CD7F32"];
+
+function Leaderboard() {
+  const [leaders, setLeaders] = useState(null);
+
+  useEffect(() => {
+    api.get("/leaderboard").then((r) => setLeaders(r.data.leaders)).catch(() => setLeaders([]));
+  }, []);
+
+  return (
+    <section id="leaderboard" className="border-y border-white/10 bg-white/[0.02] py-24 sm:py-32">
+      <div className="mx-auto max-w-3xl px-6">
+        <FadeUp>
+          <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#A78BFA]">most-watched pages</p>
+          <h2 className="mb-4 font-display text-4xl font-bold text-white sm:text-5xl">The leaderboard.</h2>
+          <p className="mb-12 max-w-lg text-sm text-white/50 sm:text-base">The pages catching the most eyes right now. Claim yours and start climbing.</p>
+        </FadeUp>
+        <FadeUp delay={0.1}>
+          <div data-testid="leaderboard-list" className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+            {leaders === null ? (
+              <div className="space-y-3 p-6">
+                {[0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}
+              </div>
+            ) : leaders.length === 0 ? (
+              <p className="p-10 text-center text-sm text-white/40">no views yet — the crown is wide open</p>
+            ) : (
+              leaders.map((l, i) => (
+                <Link
+                  key={l.username}
+                  to={`/${l.username}`}
+                  data-testid={`leaderboard-entry-${i}`}
+                  className="group flex items-center gap-4 border-b border-white/5 px-5 py-4 transition-colors last:border-0 hover:bg-white/5 sm:px-7"
+                >
+                  <span className="w-7 font-display text-lg font-bold" style={{ color: MEDALS[i] || "rgba(255,255,255,0.3)" }}>
+                    {i + 1}
+                  </span>
+                  {l.avatar_url ? (
+                    <img src={`${process.env.REACT_APP_BACKEND_URL}${l.avatar_url}`} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8B5CF6]/20 font-display text-sm font-bold text-[#A78BFA]">
+                      {l.display_name[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-white">{l.display_name}</p>
+                    <p className="truncate text-xs text-white/40">@{l.username}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-sm text-white/60">
+                    <Eye size={14} className="text-[#A78BFA]" /> {l.views.toLocaleString()}
+                  </span>
+                </Link>
+              ))
+            )}
+          </div>
+        </FadeUp>
+      </div>
+    </section>
+  );
+}
+
+function Pricing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+
+  const unlock = async () => {
+    if (!user) {
+      navigate("/register");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await api.post("/payments/checkout", { lookup_key: "theme_pack", origin_url: window.location.origin });
+      window.location.href = r.data.checkout_url;
+    } catch (e) {
+      toast.error(errMsg(e, "Could not start checkout"));
+      setBusy(false);
+    }
+  };
+
+  const free = ["your quiet page at dontblink.page/you", "live Discord mirror + online status", "Last.fm now-playing vinyl", "12 links with auto favicons", "stats, referrers + 14-day sparkline", "Paper & Charcoal themes", "a tab icon that blinks back"];
+  const premium = ["everything in free", "Moss, Ember & Dusk themes", "every future theme, automatically", "one-time payment — yours forever"];
+
+  return (
+    <section id="pricing" className="mx-auto max-w-5xl px-6 py-24 sm:py-32">
+      <FadeUp>
+        <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#A78BFA]">pricing</p>
+        <h2 className="mb-12 font-display text-4xl font-bold text-white sm:text-5xl">Free is real. Premium is once.</h2>
+      </FadeUp>
+      <div className="grid gap-6 md:grid-cols-2">
+        <FadeUp className="rounded-3xl border border-white/10 bg-white/5 p-8">
+          <p className="font-display text-lg font-bold text-white">Free</p>
+          <p className="mt-1 font-display text-4xl font-bold text-white">$0</p>
+          <p className="mb-7 mt-1 text-xs text-white/40">forever, no card</p>
+          <ul className="mb-8 space-y-3">
+            {free.map((f) => (
+              <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
+                <Check size={15} className="mt-0.5 shrink-0 text-white/40" /> {f}
+              </li>
+            ))}
+          </ul>
+          <Link to="/register" data-testid="pricing-free-btn" className="block rounded-full border border-white/15 py-3 text-center text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:text-white">
+            claim your page
+          </Link>
+        </FadeUp>
+        <FadeUp delay={0.1} className="relative overflow-hidden rounded-3xl border border-[#8B5CF6]/50 bg-[#8B5CF6]/10 p-8 shadow-[0_0_60px_rgba(139,92,246,0.2)]">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#8B5CF6]/30 blur-[70px]" />
+          <p className="font-display text-lg font-bold text-white">Premium</p>
+          <p className="mt-1 font-display text-4xl font-bold text-white">$4.99</p>
+          <p className="mb-7 mt-1 text-xs text-[#A78BFA]">once — never again</p>
+          <ul className="mb-8 space-y-3">
+            {premium.map((f) => (
+              <li key={f} className="flex items-start gap-2.5 text-sm text-white/80">
+                <Check size={15} className="mt-0.5 shrink-0 text-[#A78BFA]" /> {f}
+              </li>
+            ))}
+          </ul>
+          {user?.theme_pack ? (
+            <p data-testid="pricing-owned" className="rounded-full bg-[#8B5CF6]/20 py-3 text-center text-sm font-medium text-[#A78BFA]">unlocked on your account</p>
+          ) : (
+            <button data-testid="pricing-unlock-btn" onClick={unlock} disabled={busy} className="w-full rounded-full bg-[#8B5CF6] py-3 text-sm font-semibold text-white shadow-[0_0_30px_rgba(139,92,246,0.5)] transition-all hover:bg-[#7C4DEF] disabled:opacity-50">
+              {busy ? "opening checkout…" : user ? "unlock premium" : "claim + unlock"}
+            </button>
+          )}
+        </FadeUp>
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   const navigate = useNavigate();
   const [claim, setClaim] = useState("");
@@ -380,6 +558,12 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
+      <Compare />
+
+      <Leaderboard />
+
+      <Pricing />
 
       <Playground />
 

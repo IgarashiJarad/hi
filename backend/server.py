@@ -267,6 +267,20 @@ async def get_profile(username: str):
     return public_user(user)
 
 
+@api_router.get("/leaderboard")
+async def leaderboard():
+    cursor = db.users.find({"views": {"$gt": 0}}).sort("views", -1).limit(10)
+    leaders = []
+    async for u in cursor:
+        leaders.append({
+            "username": u["username"],
+            "display_name": u.get("display_name") or u["username"],
+            "views": u.get("views", 0),
+            "avatar_url": f"/api/files/{u['avatar_path']}" if u.get("avatar_path") else None,
+        })
+    return {"leaders": leaders}
+
+
 # ---------- Discord lookup (public proxy, cached) ----------
 
 def pick(u: dict, *keys):

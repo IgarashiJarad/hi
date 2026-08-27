@@ -43,6 +43,12 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 ## Implemented (2026-08-27, iteration 7)
 - App-wide dark plum reskin: root palette now deep plum + purple (#8B5CF6) accent; login/register and settings fully restyled (dark cards, purple CTAs, purple sparkline/focus rings/toggles). Public profile pages still honor the visitor-facing per-user theme (Paper/Charcoal/Moss/Ember/Dusk + auto day/night); settings live-preview pane renders the selected page theme.
 
+## Implemented (2026-08-27, iteration 8)
+- Nav links swapped: features/try-it removed (still on-page via scroll), now compare / leaderboard / pricing anchors
+- Compare section: dontblink vs Linktree vs Carrd table (pricing + feature rows, checks/crosses)
+- Leaderboard: GET /api/leaderboard (top 10 by views, public); landing section with medal-colored ranks, avatars, view counts, links to pages
+- Pricing section: Free vs Premium ($4.99 one-time) cards; unlock button starts Stripe checkout when logged in, sends guests to register; shows "unlocked" state when owned
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

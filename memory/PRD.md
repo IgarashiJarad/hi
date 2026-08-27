@@ -37,6 +37,9 @@ User choices: Discord linked by pasting user ID (no OAuth keys); Last.fm API key
 - Theme scheduling: settings "auto day / night" switch (theme_auto field); profile resolves Paper 06:00-18:00, Charcoal otherwise, on the visitor's clock
 - View sparkline: views tracked per day (views_by_day); settings stats shows a 14-day SVG sparkline above the total
 
+## Implemented (2026-08-27, iteration 6)
+- Landing redesign inspired by guns.lol (dark plum, glowing purple CTAs, floating glass pill nav, centered masked headline "Everything you are, right here.", tilted overlapping product mock cards — stats sparkline, live profile w/ online badge + Spotify vinyl, theme picker — purple glow shadows, dark marquee/features/playground). New component LandingDark.jsx; playground Discord card inherits dusk theme. Profile/auth/settings pages unchanged.
+
 ## Backlog
 - P1: Custom avatar upload / profile photo override — DONE
 - P1: Page view analytics (click counts per link) — DONE (per-link taps; page views still open)

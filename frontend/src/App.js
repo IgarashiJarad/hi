@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import Lenis from "lenis";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import Landing from "@/pages/Landing";
+import Landing from "@/pages/LandingDark";
 import AuthPage from "@/pages/Auth";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
